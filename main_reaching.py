@@ -674,7 +674,6 @@ def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, o
     # Define some colors
     BLACK = (0, 0, 0)
     GREEN = (0, 255, 0)
-    GREY = (0.5 * 255, 0.5 * 255, 0.5 * 255)
     CURSOR = (0.19 * 255, 0.65 * 255, 0.4 * 255)
 
     pygame.init()
@@ -845,10 +844,23 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     YELLOW = (255, 255, 0)
     CURSOR = (0.19 * 255, 0.65 * 255, 0.4 * 255)
 
+
     # Create object of openCV, Reaching class and filter_butter3
     cap = cv2.VideoCapture(0)
     r = Reaching()
     filter_curs = FilterButter3("lowpass_4")
+
+    # Defining a surface (Link1)
+    link1_orig = pygame.Surface((50 , 100))
+    # for making transparent background while rotating the image
+    link1_orig.set_colorkey(BLACK)
+    # fill the rectangle / surface with the color GREY
+    link1_orig.fill(GREY)
+    # creating a copy of original image for smooth rotation
+    link1 = link1_orig.copy()
+    link1.set_colorkey(BLACK)
+
+
 
     # Open a new window
     size = (r.width, r.height)
@@ -980,7 +992,10 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 screen.fill(BLACK)
 
                 # Drawing a square at the center of the horizontal and 1/10th of the vertical
-                pygame.draw.rect(screen, GREY, [r.width * 0.5, r.height * 0.9, 50, 100])
+                #link1 = pygame.draw.rect(screen, GREY, [size[0] * 0.5, size[1] * 0.85, 50, 100])
+
+                # Rotate link 1 degree at a time
+                rotatedlink = pygame.transform.rotate(link1,1)
 
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
                 if not r.is_blind:
