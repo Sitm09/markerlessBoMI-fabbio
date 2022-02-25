@@ -674,6 +674,7 @@ def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, o
     # Define some colors
     BLACK = (0, 0, 0)
     GREEN = (0, 255, 0)
+    GREY = (0.5 * 255, 0.5 * 255, 0.5 * 255)
     CURSOR = (0.19 * 255, 0.65 * 255, 0.4 * 255)
 
     pygame.init()
@@ -838,6 +839,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
     # Define some colors
     BLACK = (0, 0, 0)
+    GREY = (0.50 * 255, 0.50 * 255, 0.50 * 255)
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
     YELLOW = (255, 255, 0)
@@ -976,6 +978,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
                 # First, clear the screen to black. In between screen.fill and pygame.display.flip() all the draw
                 screen.fill(BLACK)
+
+                # Drawing a square at the center of the horizontal and 1/10th of the vertical
+                pygame.draw.rect(screen, GREY, [r.width * 0.5, r.height * 0.9, 50, 100])
 
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
                 if not r.is_blind:
