@@ -831,6 +831,7 @@ def blitRotate(surf, image, pos, originPos, angle):
     :param pos: the position of the pivot on the target Surface surf (relative to the top left of surf)
     :param originPos: position of the pivot on the image Surface (relative to the top left of image)
     :param angle: the angle of rotation in degrees
+    :return:
     """
     # offset from pivot to center
     image_rect = image.get_rect(topleft=(pos[0] - originPos[0], pos[1] - originPos[1]))
@@ -881,19 +882,33 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
     # Defining a surface (Link1)
     link1_orig = pygame.Surface((50, 100))
+    link2_orig = pygame.Surface((50, 100))
+    link3_orig = pygame.Surface((50, 100))
 
     # for making transparent background while rotating the image
     link1_orig.set_colorkey(BLACK)
+    link2_orig.set_colorkey(BLACK)
+    link3_orig.set_colorkey(BLACK)
+
     # fill the rectangle / surface with the color GREY
     link1_orig.fill(GREY)
+    link2_orig.fill(GREY)
+    link3_orig.fill(GREY)
+
     # creating a copy of original image for smooth rotation
     link1 = link1_orig.copy()
+    link2 = link2_orig.copy()
+    link3 = link3_orig.copy()
+
     # Creating a rectangle around the link to perform vector math and rotate off center
-    # link_rect = link1.get_rect(topleft = ())
     link1.set_colorkey(BLACK)
+    link2.set_colorkey(BLACK)
+    link3.set_colorkey(BLACK)
+
     # Defining the rotation
     link_rot1 = 0
-
+    link_rot2 = 0
+    link_rot3 = 0
 
     # Open a new window
     size = (r.width, r.height)
@@ -1035,8 +1050,11 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 '''
 
                 pos1 = (size[0] / 2, size[1] * 0.85)
+
                 blitRotate(screen, link1, pos1, (25,15), link_rot1)
                 link_rot1 += 2
+
+                screen.blit(link2, link1.get_rect(topleft))
 
                 pygame.draw.line(screen, (0, 255, 0), (pos1[0] - 20, pos1[1]), (pos1[0] + 20, pos1[1]), 3)
                 pygame.draw.line(screen, (0, 255, 0), (pos1[0], pos1[1] - 20), (pos1[0], pos1[1] + 20), 3)
