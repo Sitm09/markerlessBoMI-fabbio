@@ -822,6 +822,35 @@ def save_parameters(self, drPath):
 
     print('Customization values have been saved. You can continue with practice.')
 
+def blitRotate(surf, image, pos, originPos, angle):
+
+    """"
+    function to rotate the links from a pivot point off-center the image
+    :param surf: the target Surface
+    :param image: the Surface which has to be rotated and blit
+    :param pos: the position of the pivot on the target Surface surf (relative to the top left of surf)
+    :param originPos: position of the pivot on the image Surface (relative to the top left of image)
+    :param angle: the angle of rotation in degrees
+    """
+    # offset from pivot to center
+    image_rect = image.get_rect(topleft=(pos[0] - originPos[0], pos[1] - originPos[1]))
+    offset_center_to_pivot = pygame.math.Vector2(pos) - image_rect.center
+
+    # roatated offset from pivot to center
+    rotated_offset = offset_center_to_pivot.rotate(-angle)
+
+    # roatetd image center
+    rotated_image_center = (pos[0] - rotated_offset.x, pos[1] - rotated_offset.y)
+
+    # get a rotated image
+    rotated_image = pygame.transform.rotate(image, angle)
+    rotated_image_rect = rotated_image.get_rect(center=rotated_image_center)
+
+    # rotate and blit the image
+    surf.blit(rotated_image, rotated_image_rect)
+
+    # draw rectangle around the image
+    pygame.draw.rect(surf, (255, 0, 0), (*rotated_image_rect.topleft, *rotated_image.get_size()), 2)
 
 def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     """
@@ -852,16 +881,18 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
     # Defining a surface (Link1)
     link1_orig = pygame.Surface((50, 100))
+
     # for making transparent background while rotating the image
     link1_orig.set_colorkey(BLACK)
     # fill the rectangle / surface with the color GREY
     link1_orig.fill(GREY)
     # creating a copy of original image for smooth rotation
     link1 = link1_orig.copy()
+    # Creating a rectangle around the link to perform vector math and rotate off center
+    # link_rect = link1.get_rect(topleft = ())
     link1.set_colorkey(BLACK)
     # Defining the rotation
-    rotation = 0
-
+    link_rot1 = 0
 
 
     # Open a new window
@@ -993,13 +1024,24 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 # First, clear the screen to black. In between screen.fill and pygame.display.flip() all the draw
                 screen.fill(BLACK)
 
-                # Drawing a square at the center of the horizontal and 1/10th of the vertical
-                #link1 = pygame.draw.rect(screen, GREY, [size[0] * 0.5, size[1] * 0.85, 50, 100])
-
+                '''
                 # Rotate link 1 degree at a time
                 rotation += 1
                 rotatedlink = pygame.transform.rotate(link1, rotation)
-                screen.blit(rotatedlink, [size[0] * 0.5, size[1] * 0.85])
+                # Defining the position of the pivot on the link1 (relative to the top left of surface)
+                pos = (size[0] / 2, size[1] * 0.85)
+                # screen.blit(rotatedlink, [size[0] * 0.5, size[1] * 0.85])
+                screen.blit(rotatedlink, pos)
+                '''
+
+                pos1 = (size[0] / 2, size[1] * 0.85)
+                blitRotate(screen, link1, pos1, (25,15), link_rot1)
+                link_rot1 += 2
+
+                pygame.draw.line(screen, (0, 255, 0), (pos1[0] - 20, pos1[1]), (pos1[0] + 20, pos1[1]), 3)
+                pygame.draw.line(screen, (0, 255, 0), (pos1[0], pos1[1] - 20), (pos1[0], pos1[1] + 20), 3)
+                pygame.draw.circle(screen, (0, 255, 0), pos1, 7, 0)
+
 
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
                 if not r.is_blind:
