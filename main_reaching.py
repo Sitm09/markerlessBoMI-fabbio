@@ -851,7 +851,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     filter_curs = FilterButter3("lowpass_4")
 
     # Defining a surface (Link1)
-    link1_orig = pygame.Surface((50 , 100))
+    link1_orig = pygame.Surface((50, 100))
     # for making transparent background while rotating the image
     link1_orig.set_colorkey(BLACK)
     # fill the rectangle / surface with the color GREY
@@ -859,6 +859,8 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     # creating a copy of original image for smooth rotation
     link1 = link1_orig.copy()
     link1.set_colorkey(BLACK)
+    # Defining the rotation
+    rotation = 0
 
 
 
@@ -995,7 +997,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 #link1 = pygame.draw.rect(screen, GREY, [size[0] * 0.5, size[1] * 0.85, 50, 100])
 
                 # Rotate link 1 degree at a time
-                rotatedlink = pygame.transform.rotate(link1,1)
+                rotation += 1
+                rotatedlink = pygame.transform.rotate(link1, rotation)
+                screen.blit(rotatedlink, [size[0] * 0.5, size[1] * 0.85])
 
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
                 if not r.is_blind:
