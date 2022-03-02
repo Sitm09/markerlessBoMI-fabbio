@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import time
 import matplotlib.pyplot as plt
+import math
 # For multithreading
 from threading import Thread, Lock
 import queue
@@ -74,7 +75,7 @@ class MainApplication(tk.Frame):
         self.btn_calib.pack()
         self.btn_calib.place(relx=0.05, rely=0.25, anchor='sw')
         self.btn_calib["state"] = "disabled"
-        self.calib_duration = 10000
+        self.calib_duration = 2000
 
         # set checkboxes for selecting BoMI map
         self.check_pca = BooleanVar(value=True)
@@ -881,9 +882,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     filter_curs = FilterButter3("lowpass_4")
 
     # Defining a surface (Link1)
-    link1_orig = pygame.Surface((50, 100))
-    link2_orig = pygame.Surface((50, 100))
-    link3_orig = pygame.Surface((50, 100))
+    link1_orig = pygame.Surface((100, 50))
+    link2_orig = pygame.Surface((100, 50))
+    link3_orig = pygame.Surface((100, 50))
 
     # for making transparent background while rotating the image
     link1_orig.set_colorkey(BLACK)
@@ -1049,16 +1050,24 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 screen.blit(rotatedlink, pos)
                 '''
 
+
+                link1Rect = link1.get_rect()
+
                 pos1 = (size[0] / 2, size[1] * 0.85)
 
-                blitRotate(screen, link1, pos1, (25,15), link_rot1)
-                link_rot1 += 2
+                blitRotate(screen, link1, pos1, (link1Rect.h/2,link1Rect.w/10), link_rot1)
+                screen.blit(link2, (pos1[0] + (math.cos(math.radians(link_rot1)) * link1Rect.h) + link1Rect.h, pos1[1] - (math.sin(math.radians(link_rot1)) * link1Rect.h) - link1Rect.h + 25))
+                screen.blit(link3, (pos1[0] + (math.cos(math.radians(link_rot1)) * link1Rect.h) + link1Rect.h + 110,
+                                    pos1[1] - (math.sin(math.radians(link_rot1)) * link1Rect.h) - link1Rect.h + 25))
+                # link_rot1 += 2
+                # link_rot2 += 4
 
-                screen.blit(link2, link1.get_rect(topleft))
+
 
                 pygame.draw.line(screen, (0, 255, 0), (pos1[0] - 20, pos1[1]), (pos1[0] + 20, pos1[1]), 3)
                 pygame.draw.line(screen, (0, 255, 0), (pos1[0], pos1[1] - 20), (pos1[0], pos1[1] + 20), 3)
                 pygame.draw.circle(screen, (0, 255, 0), pos1, 7, 0)
+
 
 
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
@@ -1081,6 +1090,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 font = pygame.font.Font(None, 80)
                 text = font.render(str(r.score), True, RED)
                 screen.blit(text, (1250, 10))
+
+                coord = font.render(str(link1Rect.size), True, RED)
+                screen.blit(coord, (15, 10))
 
                 # --- update the screen with what we've drawn.
                 pygame.display.flip()
