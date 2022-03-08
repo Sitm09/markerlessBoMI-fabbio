@@ -882,7 +882,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     filter_curs = FilterButter3("lowpass_4")
 
     # Defining a surface (Link1)
-    link1_orig = pygame.Surface((100, 50))
+    link1_orig = pygame.Surface((200, 50))
     link2_orig = pygame.Surface((100, 50))
     link3_orig = pygame.Surface((100, 50))
 
@@ -1052,15 +1052,33 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
 
                 link1Rect = link1.get_rect()
+                link2Rect = link2.get_rect()
+                link3Rect = link3.get_rect()
 
+                # Assigning Anchor Points
                 pos1 = (size[0] / 2, size[1] * 0.85)
 
-                blitRotate(screen, link1, pos1, (link1Rect.h/2,link1Rect.w/10), link_rot1)
-                screen.blit(link2, (pos1[0] + (math.cos(math.radians(link_rot1)) * link1Rect.h) + link1Rect.h, pos1[1] - (math.sin(math.radians(link_rot1)) * link1Rect.h) - link1Rect.h + 25))
-                screen.blit(link3, (pos1[0] + (math.cos(math.radians(link_rot1)) * link1Rect.h) + link1Rect.h + 110,
-                                    pos1[1] - (math.sin(math.radians(link_rot1)) * link1Rect.h) - link1Rect.h + 25))
-                # link_rot1 += 2
-                # link_rot2 += 4
+                link1_anchor = (size[0]/2, size[1] * 0.85)
+                link2_anchor = ((link1_anchor[0] + (math.cos(math.radians(link_rot1)) * link1Rect.w)) + 10,
+                                link1_anchor[1] - (math.sin(math.radians(link_rot1)) * link1Rect.w))
+                link3_anchor = ((link1_anchor[0] + (math.cos(math.radians(link_rot1)) * link1Rect.w) +
+                                 (math.cos(math.radians(link_rot2)) * link2Rect.w) + 20,
+                                link1_anchor[1] - (math.sin(math.radians(link_rot1)) * link1Rect.w) -
+                                 (math.sin(math.radians(link_rot2))) * link2Rect.w))
+
+
+
+                blitRotate(screen, link1,link1_anchor, (link1Rect.h/2,link1Rect.w/10), link_rot1)
+                blitRotate(screen, link2, link2_anchor, (link2Rect.h / 2, link2Rect.w / 10), link_rot2)
+                blitRotate(screen, link3, link3_anchor, (link3Rect.h / 2, link3Rect.w / 10), link_rot3)
+
+                # screen.blit(link1, (link1_anchor[0], link1_anchor[1]))
+                # screen.blit(link2, (link2_anchor[0], link2_anchor[1]))
+                # screen.blit(link3, (link3_anchor[0], link3_anchor[1]))
+
+                link_rot1 += 2
+                link_rot2 += 4
+                link_rot3 += 8
 
 
 
