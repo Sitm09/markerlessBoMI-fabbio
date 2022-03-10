@@ -881,10 +881,10 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     r = Reaching()
     filter_curs = FilterButter3("lowpass_4")
 
-    # Defining a surface (Link1)
-    link1_orig = pygame.Surface((200, 50))
-    link2_orig = pygame.Surface((100, 50))
-    link3_orig = pygame.Surface((100, 50))
+    # Defining 3 link surfaces
+    link1_orig = pygame.Surface((r.width/5, 75))
+    link2_orig = pygame.Surface((r.width/5, 75))
+    link3_orig = pygame.Surface((r.width/5, 75))
 
     # for making transparent background while rotating the image
     link1_orig.set_colorkey(BLACK)
@@ -906,10 +906,10 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     link2.set_colorkey(BLACK)
     link3.set_colorkey(BLACK)
 
-    # Defining the rotation
+    # Defining the initial angle of rotation
     link_rot1 = 0
-    link_rot2 = 0
-    link_rot3 = 0
+    link_rot2 = 90
+    link_rot3 = 135
 
     # Open a new window
     size = (r.width, r.height)
@@ -1050,43 +1050,44 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 screen.blit(rotatedlink, pos)
                 '''
 
-
-                link1Rect = link1.get_rect()
-                link2Rect = link2.get_rect()
-                link3Rect = link3.get_rect()
+                link1rect = link1.get_rect()
+                link2rect = link2.get_rect()
+                link3rect = link3.get_rect()
 
                 # Assigning Anchor Points
                 pos1 = (size[0] / 2, size[1] * 0.85)
 
                 link1_anchor = (size[0]/2, size[1] * 0.85)
-                link2_anchor = ((link1_anchor[0] + (math.cos(math.radians(link_rot1)) * link1Rect.w)) + 10,
-                                link1_anchor[1] - (math.sin(math.radians(link_rot1)) * link1Rect.w))
-                link3_anchor = ((link1_anchor[0] + (math.cos(math.radians(link_rot1)) * link1Rect.w) +
-                                 (math.cos(math.radians(link_rot2)) * link2Rect.w) + 20,
-                                link1_anchor[1] - (math.sin(math.radians(link_rot1)) * link1Rect.w) -
-                                 (math.sin(math.radians(link_rot2))) * link2Rect.w))
+                link2_anchor = ((link1_anchor[0] + (math.cos(math.radians(link_rot1)) * link1rect.w)),
+                                link1_anchor[1] - (math.sin(math.radians(link_rot1)) * link1rect.w))
+                link3_anchor = (link2_anchor[0] + math.cos(math.radians(link_rot2)) * link2rect.w,
+                                link2_anchor[1] - (math.sin(math.radians(link_rot2)) * link2rect.w))
+                crs_anchor = (link3_anchor[0] + math.cos(math.radians(link_rot3)) * link3rect.w,
+                                link3_anchor[1] - (math.sin(math.radians(link_rot3)) * link3rect.w))
+
+                ''' 
+                Instead of drawing rectangles, I am going to just draw lines with circles as the joints. This is in hopes
+                of cutting down computing power and adding simplicity to the program               
+                '''
+
+                # Drawing the links between the joints
+                pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
+                pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
+                pygame.draw.line(screen, GREY, link3_anchor, crs_anchor, 4)
+
+                # Drawing the joints
+                pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
+                pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
+                pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
+                pygame.draw.circle(screen, RED, crs_anchor, r.crs_radius * 1.25)
 
 
 
-                blitRotate(screen, link1,link1_anchor, (link1Rect.h/2,link1Rect.w/10), link_rot1)
-                blitRotate(screen, link2, link2_anchor, (link2Rect.h / 2, link2Rect.w / 10), link_rot2)
-                blitRotate(screen, link3, link3_anchor, (link3Rect.h / 2, link3Rect.w / 10), link_rot3)
 
-                # screen.blit(link1, (link1_anchor[0], link1_anchor[1]))
-                # screen.blit(link2, (link2_anchor[0], link2_anchor[1]))
-                # screen.blit(link3, (link3_anchor[0], link3_anchor[1]))
-
+                # Defining how much each link rotates. Will be set by PCA later.
                 link_rot1 += 2
                 link_rot2 += 4
                 link_rot3 += 8
-
-
-
-                pygame.draw.line(screen, (0, 255, 0), (pos1[0] - 20, pos1[1]), (pos1[0] + 20, pos1[1]), 3)
-                pygame.draw.line(screen, (0, 255, 0), (pos1[0], pos1[1] - 20), (pos1[0], pos1[1] + 20), 3)
-                pygame.draw.circle(screen, (0, 255, 0), pos1, 7, 0)
-
-
 
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
                 if not r.is_blind:
@@ -1109,7 +1110,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 text = font.render(str(r.score), True, RED)
                 screen.blit(text, (1250, 10))
 
-                coord = font.render(str(link1Rect.size), True, RED)
+                coord = font.render(str(link1rect.size), True, RED)
                 screen.blit(coord, (15, 10))
 
                 # --- update the screen with what we've drawn.
