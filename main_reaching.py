@@ -75,7 +75,7 @@ class MainApplication(tk.Frame):
         self.btn_calib.pack()
         self.btn_calib.place(relx=0.05, rely=0.25, anchor='sw')
         self.btn_calib["state"] = "disabled"
-        self.calib_duration = 2000
+        self.calib_duration = 5000
 
         # set checkboxes for selecting BoMI map
         self.check_pca = BooleanVar(value=True)
@@ -450,12 +450,19 @@ def train_pca(calibPath, drPath):
     rot = 0
     train_pc[0] = train_pc[0] * np.cos(np.pi / 180 * rot) - train_pc[1] * np.sin(np.pi / 180 * rot)
     train_pc[1] = train_pc[0] * np.sin(np.pi / 180 * rot) + train_pc[1] * np.cos(np.pi / 180 * rot)
+
     # Applying scale
     scale = [1920 / np.ptp(train_pc[:, 0]), 1080 / np.ptp(train_pc[:, 1])]
+    velocity_scale = 10/ np.ptp(train_pc[:, 0])
+    velocity_pc = train_pc
     train_pc = train_pc * scale
+    velocity_pc = velocity_pc * velocity_scale
     # Applying offset
     off = [1920 / 2 - np.mean(train_pc[:, 0]), 1080 / 2 - np.mean(train_pc[:, 1])]
+    velocity_off = 10  - np.mean(velocity_pc[:, 0])
+
     train_pc = train_pc + off
+    velocity_pc = velocity_pc + velocity_off
 
     # Plot reconstructed signals
     # fs = 50
