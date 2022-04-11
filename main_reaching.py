@@ -426,17 +426,16 @@ def train_pca(calibPath, drPath):
     test_x = x[split:, :]
 
     # initialize object of class PCA
-    n_pc = 2
+    n_pc = 3
     PCA = PrincipalComponentAnalysis(n_pc)
 
     # train AE network
     pca, train_x_rec, train_pc, test_x_rec, test_pc = PCA.train_pca(train_x, x_test=test_x)
     print('PCA has been trained.')
-
     # save weights and biases
     if not os.path.exists(drPath):
         os.makedirs(drPath)
-    np.savetxt(drPath + "weights1.txt", pca.components_[:, :2])
+    np.savetxt(drPath + "weights1.txt", pca.components_[:, :n_pc])
 
     print('BoMI forward map (PCA parameters) has been saved.')
 
@@ -446,21 +445,24 @@ def train_pca(calibPath, drPath):
 
     # normalize latent space to fit the monitor coordinates
     # Applying rotation
-    train_pc = np.dot(train_x, pca.components_[:, :2])
+    train_pc = np.dot(train_x, pca.components_[:, :n_pc])
+    velocity_pc = train_pc
     rot = 0
     train_pc[0] = train_pc[0] * np.cos(np.pi / 180 * rot) - train_pc[1] * np.sin(np.pi / 180 * rot)
     train_pc[1] = train_pc[0] * np.sin(np.pi / 180 * rot) + train_pc[1] * np.cos(np.pi / 180 * rot)
+    train_pc = train_pc[:, :2]
+
 
     # Applying scale
     scale = [1920 / np.ptp(train_pc[:, 0]), 1080 / np.ptp(train_pc[:, 1])]
-    velocity_scale = 10/ np.ptp(train_pc[:, 0])
-    velocity_pc = train_pc
+    velocity_scale = [10/ np.ptp(velocity_pc[:, i]) for i in range(n_pc)]
+
     train_pc = train_pc * scale
     velocity_pc = velocity_pc * velocity_scale
+
     # Applying offset
     off = [1920 / 2 - np.mean(train_pc[:, 0]), 1080 / 2 - np.mean(train_pc[:, 1])]
-    velocity_off = 10  - np.mean(velocity_pc[:, 0])
-
+    velocity_off = [10 - np.mean(velocity_pc[:, i]) for i in range(n_pc)]
     train_pc = train_pc + off
     velocity_pc = velocity_pc + velocity_off
 
