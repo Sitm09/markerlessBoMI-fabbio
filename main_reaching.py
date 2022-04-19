@@ -476,11 +476,19 @@ def train_pca(calibPath, drPath):
     plt.title('Projections in workspace')
     plt.axis("equal")
 
+    ''' 
     # save AE scaling values
     with open(drPath + "rotation_dr.txt", 'w') as f:
         print(rot, file=f)
     np.savetxt(drPath + "scale_dr.txt", scale)
     np.savetxt(drPath + "offset_dr.txt", off)
+    '''
+
+    # save AE scaling values w/ velocity
+    with open(drPath + "rotation_dr.txt", 'w') as f:
+        print(rot, file=f)
+    np.savetxt(drPath + "scale_dr.txt", velocity_scale)
+    np.savetxt(drPath + "offset_dr.txt", velocity_off)
 
     print('PCA scaling values has been saved. You can continue with customization.')
 
@@ -717,7 +725,7 @@ def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, o
             r.body = np.copy(body)
 
             # apply BoMI forward map to body vector to obtain cursor position
-            r.crs_x, r.crs_y = reaching_functions.update_cursor_position_custom(r.body, map, rot, scale, off)
+            r.crs_x, r.crs_y, r.crs_z = reaching_functions.update_cursor_position_custom_3links(r.body, map, rot, scale, off)
 
             # Apply extra customization according to textbox values (try/except allows to catch invalid inputs)
             try:
@@ -819,10 +827,10 @@ def save_parameters(self, drPath):
     rot = int(self.retrieve_txt_rot())
     gx_custom = float(self.retrieve_txt_gx())
     gy_custom = float(self.retrieve_txt_gy())
-    scale = [gx_custom, gy_custom]
+    scale = [gx_custom, gy_custom, 1]
     ox_custom = int(self.retrieve_txt_ox())
     oy_custom = int(self.retrieve_txt_oy())
-    off = [ox_custom, oy_custom]
+    off = [ox_custom, oy_custom, 1]
 
     # save customization values
     with open(drPath + "rotation_custom.txt", 'w') as f:
@@ -875,6 +883,10 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
     # get value from checkbox - is mouse enabled?
     mouse_enabled = check_mouse.get()
+
+    # set parameters for mediapipe detection and tracking
+    min_detection = 0.3
+    min_confidence = 0.3
 
     # Define some colors
     BLACK = (0, 0, 0)
@@ -946,8 +958,8 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     # pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True, smooth_landmarks=False)
     # hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
     mp_holistic = mp.solutions.holistic
-    holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True,
-                                    smooth_landmarks=False)
+    holistic = mp_holistic.Holistic(min_detection_confidence=min_detection, min_tracking_confidence=min_confidence,
+                                    upper_body_only=True, smooth_landmarks=False)
 
     # load scaling values for covering entire monitor workspace
     rot_dr = pd.read_csv(drPath + 'rotation_dr.txt', sep=' ', header=None).values
@@ -1011,7 +1023,11 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
             r.body = np.copy(body)
 
             # apply BoMI forward map to body vector to obtain cursor position.
-            r.crs_x, r.crs_y = reaching_functions.update_cursor_position\
+            # r.crs_x, r.crs_y, r.crs_z = reaching_functions.update_cursor_position\
+            #     (r.body, map, rot_dr, scale_dr, off_dr, rot_custom, scale_custom, off_custom)
+
+            # apply BoMI forward map to body vector to obtain 3 different degrees.
+            r.crs_x, r.crs_y, r.crs_z = reaching_functions.update_degrees\
                 (r.body, map, rot_dr, scale_dr, off_dr, rot_custom, scale_custom, off_custom)
 
             # # Moving the paddles when the user uses the arrow keys
@@ -1025,6 +1041,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
             # if keys[pygame.K_d]:
             #     r.crs_x += 75
 
+            '''
+            # Leaving out because for now I do want to go below zero. Relic of using 2-dim cursor control 
+                and not angles
             # Check if the crs is bouncing against any of the 4 walls:
             if r.crs_x >= r.width:
                 r.crs_x = r.width
@@ -1034,9 +1053,13 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 r.crs_y = 0
             if r.crs_y <= 0:
                 r.crs_y = r.height
+            '''
 
             # Filter the cursor
-            r.crs_x, r.crs_y = reaching_functions.filter_cursor(r, filter_curs)
+            # r.crs_x, r.crs_y, r.crs_z = reaching_functions.filter_cursor(r, filter_curs)
+
+            # Filter the angles
+            # r.crs_x, r.crs_y, r.crs_z = reaching_functions.filter_links(r, filter_curs)
 
             # if mouse checkbox was enabled do not draw the reaching GUI, only change coordinates of the computer cursor
             if mouse_enabled:
@@ -1088,13 +1111,13 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
                 pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
                 pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
-                pygame.draw.circle(screen, RED, crs_anchor, r.crs_radius * 1.25)
+                pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
 
 
 
 
                 # Defining how much each link rotates. Will be set by PCA later.
-                link_rot1 += 2
+                link_rot1 += r.crs_x
                 link_rot2 += 4
                 link_rot3 += 8
 
@@ -1102,6 +1125,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 if not r.is_blind:
                     # draw cursor
                     pygame.draw.circle(screen, CURSOR, (int(r.crs_x), int(r.crs_y)), r.crs_radius)
+
 
                 # draw target. green if blind, state 0 or 1. yellow if notBlind and state 2
                 if r.state == 0:  # green
@@ -1115,12 +1139,17 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                         pygame.draw.circle(screen, YELLOW, (int(r.tgt_x), int(r.tgt_y)), r.tgt_radius, 2)
 
                 # Display scores:
-                font = pygame.font.Font(None, 80)
+                font = pygame.font.Font(None, 50)
                 text = font.render(str(r.score), True, RED)
                 screen.blit(text, (1250, 10))
 
-                coord = font.render(str(link1rect.size), True, RED)
-                screen.blit(coord, (15, 10))
+                # Debugging purposes. Displaying information online
+                deg1 = font.render(str(r.crs_x), True, RED)
+                deg2 = font.render(str(r.crs_y), True, RED)
+                deg3 = font.render(str(r.crs_z), True, RED)
+                screen.blit(deg1, (15, 10))
+                screen.blit(deg2, (15, 60))
+                screen.blit(deg3, (15, 110))
 
                 # --- update the screen with what we've drawn.
                 pygame.display.flip()
@@ -1220,6 +1249,8 @@ def mediapipe_forwardpass(holistic, mp_holistic, lock, q_frame, r, num_joints, j
                 body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.PINKY_TIP].y)
 
             body_mp = np.array(body_list)
+            q_frame.queue.clear()
+
             # body_mp = np.reshape(body_mp_temp[np.argwhere(body_mp_temp)], ((num_joints*2,)))
             # body_mp = np.array((n_x, n_y, ls_x, ls_y, rs_x, rs_y))
             # body = np.divide(body_mp, norm)

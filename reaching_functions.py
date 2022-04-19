@@ -70,6 +70,14 @@ def filter_cursor(r, filter_curs):
 
     return filter_curs.filtered_value[0], filter_curs.filtered_value[1]
 
+def filter_links(r, filter_curs):
+
+    filter_curs.update_cursor(r.crs_x, 0)
+    filter_curs.update_cursor(r.crs_y, 1)
+    filter_curs.update_cursor(r.crs_z, 2)
+
+    return filter_curs.filtered_value[0], filter_curs.filtered_value[1], filter_curs.filtered_value[2]
+
 
 def update_cursor_position_custom(body, map, rot, scale, off):
 
@@ -92,6 +100,29 @@ def update_cursor_position_custom(body, map, rot, scale, off):
 
     return cu[0], cu[1]
 
+def update_cursor_position_custom_3links(body, map, rot, scale, off):
+
+    if type(map) != tuple:
+        cu = np.dot(body, map)
+    else:
+        h = np.tanh(np.dot(body, map[0][0]) + map[1][0])
+        h = np.tanh(np.dot(h, map[0][1]) + map[1][1])
+        cu = np.dot(h, map[0][2]) + map[1][2]
+
+    # Applying rotation
+    cu[0] = cu[0] * np.cos(np.pi / 180 * rot) - cu[1] * np.sin(np.pi / 180 * rot)
+    cu[1] = cu[0] * np.sin(np.pi / 180 * rot) + cu[1] * np.cos(np.pi / 180 * rot)
+
+    # Applying scale
+    cu = cu * scale
+
+    # Applying offset
+    cu = cu + off
+
+    return cu[0], cu[1]
+
+## add cu[2]
+
 
 def update_cursor_position(body, map, rot_ae, scale_ae, off_ae, rot_custom, scale_custom, off_custom):
 
@@ -103,18 +134,41 @@ def update_cursor_position(body, map, rot_ae, scale_ae, off_ae, rot_custom, scal
         cu = np.dot(h, map[0][2]) + map[1][2]
 
     # Applying rotation, scale and offset computed after AE training
-    cu[0] = cu[0] * np.cos(np.pi / 180 * rot_ae) - cu[1] * np.sin(np.pi / 180 * rot_ae)
-    cu[1] = cu[0] * np.sin(np.pi / 180 * rot_ae) + cu[1] * np.cos(np.pi / 180 * rot_ae)
+    # cu[0] = cu[0] * np.cos(np.pi / 180 * rot_ae) - cu[1] * np.sin(np.pi / 180 * rot_ae)
+    # cu[1] = cu[0] * np.sin(np.pi / 180 * rot_ae) + cu[1] * np.cos(np.pi / 180 * rot_ae)
     cu = cu * scale_ae
     cu = cu + off_ae
 
     # Applying rotation, scale and offset computed after customization
-    cu[0] = cu[0] * np.cos(np.pi / 180 * rot_custom) - cu[1] * np.sin(np.pi / 180 * rot_custom)
-    cu[1] = cu[0] * np.sin(np.pi / 180 * rot_custom) + cu[1] * np.cos(np.pi / 180 * rot_custom)
+    # cu[0] = cu[0] * np.cos(np.pi / 180 * rot_custom) - cu[1] * np.sin(np.pi / 180 * rot_custom)
+    # cu[1] = cu[0] * np.sin(np.pi / 180 * rot_custom) + cu[1] * np.cos(np.pi / 180 * rot_custom)
     cu = cu * scale_custom
     cu = cu + off_custom
 
     return cu[0], cu[1]
+
+def update_degrees(body, map, rot_ae, scale_ae, off_ae, rot_custom, scale_custom, off_custom):
+
+    if type(map) != tuple:
+        dg = np.dot(body, map)
+    else:
+        h = np.tanh(np.dot(body, map[0][0]) + map[1][0])
+        h = np.tanh(np.dot(h, map[0][1]) + map[1][1])
+        dg = np.dot(h, map[0][2]) + map[1][2]
+
+    # Applying rotation, scale and offset computed after AE training
+    # cu[0] = cu[0] * np.cos(np.pi / 180 * rot_ae) - cu[1] * np.sin(np.pi / 180 * rot_ae)
+    # cu[1] = cu[0] * np.sin(np.pi / 180 * rot_ae) + cu[1] * np.cos(np.pi / 180 * rot_ae)
+    dg = dg * scale_ae
+    dg = dg + off_ae
+
+    # Applying rotation, scale and offset computed after customization
+    # cu[0] = cu[0] * np.cos(np.pi / 180 * rot_custom) - cu[1] * np.sin(np.pi / 180 * rot_custom)
+    # cu[1] = cu[0] * np.sin(np.pi / 180 * rot_custom) + cu[1] * np.cos(np.pi / 180 * rot_custom)
+    dg = dg * scale_custom
+    dg = dg + off_custom
+
+    return dg[0], dg[1], dg[2]
 
 
 def write_practice_files(r, body, timer_practice):

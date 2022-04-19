@@ -9,6 +9,7 @@ class Reaching:
         # pygame parameters
         self._width = 1920
         self._height = 1080
+        self._velocity3 = 3
         self._crs_radius = 15
         self._tgt_radius = 45
         self._tgt_dist = 378
@@ -38,6 +39,7 @@ class Reaching:
         self._count_mouse = 0
         self._crs_x = self._width / 2
         self._crs_y = self._height / 2
+        self._crs_z = self._velocity3
         self._old_crs_x = self._crs_x
         self._old_crs_y = self._crs_y
         self._body = np.zeros((6,))
@@ -58,6 +60,10 @@ class Reaching:
     @property
     def height(self):
         return self._height
+
+    @property
+    def velocity3(self):
+        return self._velocity3
 
     @property
     def crs_radius(self):
@@ -209,6 +215,14 @@ class Reaching:
     @crs_y.setter
     def crs_y(self, value):
         self._crs_y = value
+
+    @property
+    def crs_z(self):
+        return self._crs_z
+
+    @crs_z.setter
+    def crs_z(self, value):
+        self._crs_z = value
 
     @property
     def old_crs_x(self):

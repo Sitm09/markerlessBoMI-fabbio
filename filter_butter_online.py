@@ -41,6 +41,20 @@ class FilterButter3:
         self._out_cursor_history[1, coord] = self._out_cursor_history[0, coord]
         self._out_cursor_history[0, coord] = new_output
 
+    def update_degrees(self, new_input, coord):
+        new_output = self._b0 * new_input + self._b1 * self._in_cursor_history[0, coord] + \
+                     self._b2 * self._in_cursor_history[1, coord] + self._b3 * self._in_cursor_history[2, coord] - \
+                     self._a1 * self._out_cursor_history[0, coord] - self._a2 * self._out_cursor_history[1, coord] - \
+                     self._a3 * self._out_cursor_history[2, coord]
+
+        self._in_cursor_history[2, coord] = self._in_cursor_history[1, coord]
+        self._in_cursor_history[1, coord] = self._in_cursor_history[0, coord]
+        self._in_cursor_history[0, coord] = new_input
+
+        self._out_cursor_history[2, coord] = self._out_cursor_history[1, coord]
+        self._out_cursor_history[1, coord] = self._out_cursor_history[0, coord]
+        self._out_cursor_history[0, coord] = new_output
+
     @property
     def filtered_value(self):
         return self._out_cursor_history[0, :]

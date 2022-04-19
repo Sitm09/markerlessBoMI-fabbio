@@ -42,7 +42,7 @@ label_dict = {
     9: 'truck',
 }
 
-# plt.figure(figsize=[5, 5])
+plt.figure(figsize=[5, 5])
 
 # Display the first image in training data
 plt.subplot(121)
