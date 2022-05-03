@@ -224,6 +224,47 @@ def check_target_reaching(r, timer_enter_tgt):
         else:
             r.at_home = 0
 
+def check_target_reaching_links(r, timer_enter_tgt):
+    """
+    Check if cursor is inside the target
+    """
+    dist = np.sqrt((r.crs_x - r.tgt_x) ** 2 + (r.crs_y - r.tgt_y) ** 2)
+    # If you are not in a blind trial
+    if r.is_blind == 0:
+        if dist < r.tgt_radius:
+            # if cursor is inside the target: start the timer that will count for how long the cursor will stay in the
+            # target, then change status (INSIDE target)
+            if r.state == 0 or r.state == 1:
+                timer_enter_tgt.start()
+            r.state = 2
+        # if cursor is inside the target (or if it used to be but currently is not) then go back at state 0
+        # (OUT OF target, IN TIME) and reset timer
+        else:
+            r.state = 0
+            # timer_enter_tgt.reset()  # Stops time interval measurement and resets the elapsed time to zero.
+            timer_enter_tgt.start()
+
+    # If blind trial -> stopping criterion is different
+    # (cursor has to remain in a specific region for 2000 ms (50 Hz -> count_mouse == 100)
+    else:
+        if (r.old_crs_x + 10 > r.crs_x > r.old_crs_x - 10 and
+                r.old_crs_y + 10 > r.crs_y > r.old_crs_y - 10 and r.at_home == 0):
+            r.count_mouse += 1
+        else:
+            r.count_mouse = 0
+
+    # Check here if the cursor is in the home target. In this case modify at_home to turn on/off the visual feedback
+    # if the corresponding checkbox is selected
+    if (r.repetition > 5 and
+            (r.block == 2 or r.block == 3 or r.block == 4 or r.block == 5 or
+             r.block == 7 or r.block == 8 or r.block == 9 or r.block == 10)):
+        if (r.tgt_x_list[r.list_tgt[r.trial - 2]] - r.tgt_radius < r.crs_x < r.tgt_x_list[
+            r.list_tgt[r.trial - 2]] + r.tgt_radius and
+                r.tgt_y_list[r.list_tgt[r.trial - 2]] - r.tgt_radius < r.crs_y < r.tgt_y_list[
+                    r.list_tgt[r.trial - 2]] + r.tgt_radius):
+            r.at_home = 1
+        else:
+            r.at_home = 0
 
 def check_time_reaching(r, timer_enter_tgt, timer_start_trial, timer_practice):
     if r.state == 0:  # OUT OF target, IN TIME

@@ -772,7 +772,7 @@ def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, o
 
             # Check if the crs is bouncing against any of the 4 walls:
 
-            # Limit cursor workspace
+            ''' # Limit cursor workspace
             if r.crs_x >= r.width:
                 r.crs_x = r.width
             if r.crs_x <= 0:
@@ -781,6 +781,7 @@ def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, o
                 r.crs_y = 0
             if r.crs_y <= 0:
                 r.crs_y = r.height
+            '''
 
             # Filter the cursor
             r.crs_x, r.crs_y = reaching_functions.filter_cursor(r, filter_curs)
@@ -1041,8 +1042,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
             # if keys[pygame.K_d]:
             #     r.crs_x += 75
 
-
-            # Check if the crs is greater than set angle  magnitude velocity:
+            # Check if the crs is greater than set angle magnitude velocity:
             max_angle_velocity = 7
             min_angle_velocity = -7
 
@@ -1060,7 +1060,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 r.crs_z = min_angle_velocity
 
             # Filter the cursor
-            # r.crs_x, r.crs_y, r.crs_z = reaching_functions.filter_cursor(r, filter_curs)
+            # r.crs_x, r.crs_y = reaching_functions.filter_cursor(r, filter_curs)
 
             # Filter the angles
             # r.crs_x, r.crs_y, r.crs_z = reaching_functions.filter_links(r, filter_curs)
@@ -1144,13 +1144,21 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 text = font.render(str(r.score), True, RED)
                 screen.blit(text, (1250, 10))
 
+                # Defining anchor coordinates
+                r.crs_anchor_x = crs_anchor[0]
+                r.crs_anchor_y = crs_anchor[1]
+
                 # Debugging purposes. Displaying information online
                 deg1 = font.render(str(r.crs_x), True, RED)
                 deg2 = font.render(str(r.crs_y), True, RED)
                 deg3 = font.render(str(r.crs_z), True, RED)
+                x_coord = font.render(str(r.crs_anchor_x), True, GREEN)
+                y_coord = font.render(str(crs_anchor[1]), True, GREEN)
                 screen.blit(deg1, (15, 10))
                 screen.blit(deg2, (15, 60))
                 screen.blit(deg3, (15, 110))
+                screen.blit(x_coord, (15, 160))
+                screen.blit(y_coord, (15, 210))
 
                 # --- update the screen with what we've drawn.
                 pygame.display.flip()

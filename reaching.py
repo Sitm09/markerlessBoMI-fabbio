@@ -40,6 +40,8 @@ class Reaching:
         self._crs_x = self._width / 2
         self._crs_y = self._height / 2
         self._crs_z = self._velocity3
+        self._crs_anchor_x = self._width / 2
+        self._crs_anchor_y = self._height / 2
         self._old_crs_x = self._crs_x
         self._old_crs_y = self._crs_y
         self._body = np.zeros((6,))
@@ -223,6 +225,22 @@ class Reaching:
     @crs_z.setter
     def crs_z(self, value):
         self._crs_z = value
+
+    @property
+    def crs_anchor_x(self):
+        return self._crs_anchor_x
+
+    @crs_anchor_x.setter
+    def crs_anchor_x(self, value):
+        self._crs_anchor_x = value
+
+    @property
+    def crs_anchor_y(self):
+        return self._crs_anchor_y
+
+    @crs_anchor_y.setter
+    def crs_anchor_y(self, value):
+        self._crs_anchor_y = value
 
     @property
     def old_crs_x(self):
