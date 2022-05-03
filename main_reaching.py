@@ -75,7 +75,7 @@ class MainApplication(tk.Frame):
         self.btn_calib.pack()
         self.btn_calib.place(relx=0.05, rely=0.25, anchor='sw')
         self.btn_calib["state"] = "disabled"
-        self.calib_duration = 5000
+        self.calib_duration = 12000
 
         # set checkboxes for selecting BoMI map
         self.check_pca = BooleanVar(value=True)
@@ -455,14 +455,14 @@ def train_pca(calibPath, drPath):
 
     # Applying scale
     scale = [1920 / np.ptp(train_pc[:, 0]), 1080 / np.ptp(train_pc[:, 1])]
-    velocity_scale = [10/ np.ptp(velocity_pc[:, i]) for i in range(n_pc)]
+    velocity_scale = [3 / np.ptp(velocity_pc[:, i]) for i in range(n_pc)]
 
     train_pc = train_pc * scale
     velocity_pc = velocity_pc * velocity_scale
 
     # Applying offset
     off = [1920 / 2 - np.mean(train_pc[:, 0]), 1080 / 2 - np.mean(train_pc[:, 1])]
-    velocity_off = [10 - np.mean(velocity_pc[:, i]) for i in range(n_pc)]
+    velocity_off = [0 - np.mean(velocity_pc[:, i]) for i in range(n_pc)]
     train_pc = train_pc + off
     velocity_pc = velocity_pc + velocity_off
 
@@ -885,8 +885,8 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     mouse_enabled = check_mouse.get()
 
     # set parameters for mediapipe detection and tracking
-    min_detection = 0.3
-    min_confidence = 0.3
+    min_detection = 0.75
+    min_confidence = 0.75
 
     # Define some colors
     BLACK = (0, 0, 0)
@@ -929,8 +929,8 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
     # Defining the initial angle of rotation
     link_rot1 = 0
-    link_rot2 = 90
-    link_rot3 = 135
+    link_rot2 = 0
+    link_rot3 = 0
 
     # Open a new window
     size = (r.width, r.height)
@@ -1041,19 +1041,23 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
             # if keys[pygame.K_d]:
             #     r.crs_x += 75
 
-            '''
-            # Leaving out because for now I do want to go below zero. Relic of using 2-dim cursor control 
-                and not angles
-            # Check if the crs is bouncing against any of the 4 walls:
-            if r.crs_x >= r.width:
-                r.crs_x = r.width
-            if r.crs_x <= 0:
-                r.crs_x = 0
-            if r.crs_y >= r.height:
-                r.crs_y = 0
-            if r.crs_y <= 0:
-                r.crs_y = r.height
-            '''
+
+            # Check if the crs is greater than set angle  magnitude velocity:
+            max_angle_velocity = 7
+            min_angle_velocity = -7
+
+            if r.crs_x >= max_angle_velocity:
+                r.crs_x = max_angle_velocity
+            if r.crs_x <= min_angle_velocity:
+                r.crs_x = min_angle_velocity
+            if r.crs_y >= max_angle_velocity:
+                r.crs_y = max_angle_velocity
+            if r.crs_y <= min_angle_velocity:
+                r.crs_y = min_angle_velocity
+            if r.crs_z >= max_angle_velocity:
+                r.crs_z = max_angle_velocity
+            if r.crs_z <= min_angle_velocity:
+                r.crs_z = min_angle_velocity
 
             # Filter the cursor
             # r.crs_x, r.crs_y, r.crs_z = reaching_functions.filter_cursor(r, filter_curs)
@@ -1113,13 +1117,10 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
                 pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
 
-
-
-
                 # Defining how much each link rotates. Will be set by PCA later.
                 link_rot1 += r.crs_x
-                link_rot2 += 4
-                link_rot3 += 8
+                link_rot2 += r.crs_y
+                link_rot3 += r.crs_z
 
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
                 if not r.is_blind:
