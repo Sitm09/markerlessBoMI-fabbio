@@ -1031,6 +1031,21 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
             r.crs_x, r.crs_y, r.crs_z = reaching_functions.update_degrees\
                 (r.body, map, rot_dr, scale_dr, off_dr, rot_custom, scale_custom, off_custom)
 
+            # Assigning Anchor Points
+            pos1 = (size[0] / 2, size[1] * 0.85)
+
+            link1rect = link1.get_rect()
+            link2rect = link2.get_rect()
+            link3rect = link3.get_rect()
+
+            link1_anchor = (size[0] / 2, size[1] * 0.85)
+            link2_anchor = ((link1_anchor[0] + (math.cos(math.radians(link_rot1)) * link1rect.w)),
+                            link1_anchor[1] - (math.sin(math.radians(link_rot1)) * link1rect.w))
+            link3_anchor = (link2_anchor[0] + math.cos(math.radians(link_rot2)) * link2rect.w,
+                            link2_anchor[1] - (math.sin(math.radians(link_rot2)) * link2rect.w))
+            crs_anchor = (link3_anchor[0] + math.cos(math.radians(link_rot3)) * link3rect.w,
+                          link3_anchor[1] - (math.sin(math.radians(link_rot3)) * link3rect.w))
+
             # # Moving the paddles when the user uses the arrow keys
             # keys = pygame.key.get_pressed()
             # if keys[pygame.K_w]:
@@ -1076,47 +1091,6 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 # First, clear the screen to black. In between screen.fill and pygame.display.flip() all the draw
                 screen.fill(BLACK)
 
-                '''
-                # Rotate link 1 degree at a time
-                rotation += 1
-                rotatedlink = pygame.transform.rotate(link1, rotation)
-                # Defining the position of the pivot on the link1 (relative to the top left of surface)
-                pos = (size[0] / 2, size[1] * 0.85)
-                # screen.blit(rotatedlink, [size[0] * 0.5, size[1] * 0.85])
-                screen.blit(rotatedlink, pos)
-                '''
-
-                link1rect = link1.get_rect()
-                link2rect = link2.get_rect()
-                link3rect = link3.get_rect()
-
-                # Assigning Anchor Points
-                pos1 = (size[0] / 2, size[1] * 0.85)
-
-                link1_anchor = (size[0]/2, size[1] * 0.85)
-                link2_anchor = ((link1_anchor[0] + (math.cos(math.radians(link_rot1)) * link1rect.w)),
-                                link1_anchor[1] - (math.sin(math.radians(link_rot1)) * link1rect.w))
-                link3_anchor = (link2_anchor[0] + math.cos(math.radians(link_rot2)) * link2rect.w,
-                                link2_anchor[1] - (math.sin(math.radians(link_rot2)) * link2rect.w))
-                crs_anchor = (link3_anchor[0] + math.cos(math.radians(link_rot3)) * link3rect.w,
-                                link3_anchor[1] - (math.sin(math.radians(link_rot3)) * link3rect.w))
-
-                ''' 
-                Instead of drawing rectangles, I am going to just draw lines with circles as the joints. This is in hopes
-                of cutting down computing power and adding simplicity to the program               
-                '''
-
-                # Drawing the links between the joints
-                pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
-                pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
-                pygame.draw.line(screen, GREY, link3_anchor, crs_anchor, 4)
-
-                # Drawing the joints
-                pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
-                pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
-                pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
-                pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
-
                 # Defining how much each link rotates. Will be set by PCA later.
                 link_rot1 += r.crs_x
                 link_rot2 += r.crs_y
@@ -1125,7 +1099,17 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
                 if not r.is_blind:
                     # draw cursor
-                    pygame.draw.circle(screen, CURSOR, (int(r.crs_x), int(r.crs_y)), r.crs_radius)
+                    # pygame.draw.circle(screen, CURSOR, (int(r.crs_x), int(r.crs_y)), r.crs_radius)
+                    # Drawing the links between the joints
+                    pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
+                    pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
+                    pygame.draw.line(screen, GREY, link3_anchor, crs_anchor, 4)
+
+                    # Drawing the joints
+                    pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
+                    pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
+                    pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
+                    pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
 
 
                 # draw target. green if blind, state 0 or 1. yellow if notBlind and state 2
@@ -1153,7 +1137,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 deg2 = font.render(str(r.crs_y), True, RED)
                 deg3 = font.render(str(r.crs_z), True, RED)
                 x_coord = font.render(str(r.crs_anchor_x), True, GREEN)
-                y_coord = font.render(str(crs_anchor[1]), True, GREEN)
+                y_coord = font.render(str(r.crs_anchor_y), True, GREEN)
                 screen.blit(deg1, (15, 10))
                 screen.blit(deg2, (15, 60))
                 screen.blit(deg3, (15, 110))
@@ -1164,7 +1148,8 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 pygame.display.flip()
 
                 # After showing the cursor, check whether cursor is in the target
-                reaching_functions.check_target_reaching(r, timer_enter_tgt)
+                # reaching_functions.check_target_reaching(r, timer_enter_tgt)
+                reaching_functions.check_target_reaching_links(r, timer_enter_tgt)
                 # Then check if cursor stayed in the target for enough time
                 reaching_functions.check_time_reaching(r, timer_enter_tgt, timer_start_trial, timer_practice)
 

@@ -228,7 +228,7 @@ def check_target_reaching_links(r, timer_enter_tgt):
     """
     Check if cursor is inside the target
     """
-    dist = np.sqrt((r.crs_x - r.tgt_x) ** 2 + (r.crs_y - r.tgt_y) ** 2)
+    dist = np.sqrt((r.crs_anchor_x - r.tgt_x) ** 2 + (r.crs_anchor_y - r.tgt_y) ** 2)
     # If you are not in a blind trial
     if r.is_blind == 0:
         if dist < r.tgt_radius:
@@ -247,8 +247,8 @@ def check_target_reaching_links(r, timer_enter_tgt):
     # If blind trial -> stopping criterion is different
     # (cursor has to remain in a specific region for 2000 ms (50 Hz -> count_mouse == 100)
     else:
-        if (r.old_crs_x + 10 > r.crs_x > r.old_crs_x - 10 and
-                r.old_crs_y + 10 > r.crs_y > r.old_crs_y - 10 and r.at_home == 0):
+        if (r.old_crs_x + 10 > r.crs_anchor_x > r.old_crs_x - 10 and
+                r.old_crs_y + 10 > r.crs_anchor_y > r.old_crs_y - 10 and r.at_home == 0):
             r.count_mouse += 1
         else:
             r.count_mouse = 0
@@ -258,9 +258,9 @@ def check_target_reaching_links(r, timer_enter_tgt):
     if (r.repetition > 5 and
             (r.block == 2 or r.block == 3 or r.block == 4 or r.block == 5 or
              r.block == 7 or r.block == 8 or r.block == 9 or r.block == 10)):
-        if (r.tgt_x_list[r.list_tgt[r.trial - 2]] - r.tgt_radius < r.crs_x < r.tgt_x_list[
+        if (r.tgt_x_list[r.list_tgt[r.trial - 2]] - r.tgt_radius < r.crs_anchor_x < r.tgt_x_list[
             r.list_tgt[r.trial - 2]] + r.tgt_radius and
-                r.tgt_y_list[r.list_tgt[r.trial - 2]] - r.tgt_radius < r.crs_y < r.tgt_y_list[
+                r.tgt_y_list[r.list_tgt[r.trial - 2]] - r.tgt_radius < r.crs_anchor_y < r.tgt_y_list[
                     r.list_tgt[r.trial - 2]] + r.tgt_radius):
             r.at_home = 1
         else:
