@@ -332,7 +332,7 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
     # pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True, smooth_landmarks=False)
     # hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
     mp_holistic = mp.solutions.holistic
-    holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True,
+    holistic = mp_holistic.Holistic(min_detection_confidence=0.3, min_tracking_confidence=0.3, upper_body_only=True,
                                     smooth_landmarks=False)
 
     # initialize lock for avoiding race conditions in threads
@@ -636,7 +636,7 @@ def initialize_customization(self, dr_mode, drPath, num_joints, joints):
     # pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True, smooth_landmarks=False)
     # hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
     mp_holistic = mp.solutions.holistic
-    holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True,
+    holistic = mp_holistic.Holistic(min_detection_confidence=0.6, min_tracking_confidence=0.6, upper_body_only=True,
                                     smooth_landmarks=False)
 
     # load scaling values saved after training AE for covering entire monitor workspace
@@ -886,8 +886,8 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     mouse_enabled = check_mouse.get()
 
     # set parameters for mediapipe detection and tracking
-    min_detection = 0.75
-    min_confidence = 0.75
+    min_detection = 0.6
+    min_confidence = 0.6
 
     # Define some colors
     BLACK = (0, 0, 0)
@@ -1017,8 +1017,8 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
         if not r.is_paused:
             # Copy old cursor position
-            r.old_crs_x = r.crs_x
-            r.old_crs_y = r.crs_y
+            r.old_crs_x = r.crs_anchor_x  # changed from r.crs_x
+            r.old_crs_y = r.crs_anchor_y  # changed from r.crs_y
 
             # get current value of body
             r.body = np.copy(body)
@@ -1045,6 +1045,10 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                             link2_anchor[1] - (math.sin(math.radians(link_rot2)) * link2rect.w))
             crs_anchor = (link3_anchor[0] + math.cos(math.radians(link_rot3)) * link3rect.w,
                           link3_anchor[1] - (math.sin(math.radians(link_rot3)) * link3rect.w))
+
+            # Defining anchor coordinates
+            r.crs_anchor_x = crs_anchor[0]
+            r.crs_anchor_y = crs_anchor[1]
 
             # # Moving the paddles when the user uses the arrow keys
             # keys = pygame.key.get_pressed()
@@ -1111,7 +1115,6 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                     pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
                     pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
 
-
                 # draw target. green if blind, state 0 or 1. yellow if notBlind and state 2
                 if r.state == 0:  # green
                     pygame.draw.circle(screen, GREEN, (int(r.tgt_x), int(r.tgt_y)), r.tgt_radius, 2)
@@ -1127,10 +1130,6 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 font = pygame.font.Font(None, 50)
                 text = font.render(str(r.score), True, RED)
                 screen.blit(text, (1250, 10))
-
-                # Defining anchor coordinates
-                r.crs_anchor_x = crs_anchor[0]
-                r.crs_anchor_y = crs_anchor[1]
 
                 # Debugging purposes. Displaying information online
                 deg1 = font.render(str(r.crs_x), True, RED)
@@ -1148,7 +1147,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 pygame.display.flip()
 
                 # After showing the cursor, check whether cursor is in the target
-                # reaching_functions.check_target_reaching(r, timer_enter_tgt)
+                # reaching_functions.check_target_reaching(r, timer_enter_tgt) OLD CODE FROM X-Y
                 reaching_functions.check_target_reaching_links(r, timer_enter_tgt)
                 # Then check if cursor stayed in the target for enough time
                 reaching_functions.check_time_reaching(r, timer_enter_tgt, timer_start_trial, timer_practice)
