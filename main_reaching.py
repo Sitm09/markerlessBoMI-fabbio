@@ -350,7 +350,8 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
     # mp_pose = mp.solutions.pose
     # mp_hands = mp.solutions.hands
     # pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True, smooth_landmarks=False)
-    # hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
+    mp_hands = mp.solutions.hands
+    hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
     mp_holistic = mp.solutions.holistic
     holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True,
                                     smooth_landmarks=False)
@@ -371,7 +372,7 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
 
     # initialize thread for DLC/mediapipe operations
     mediapipe_thread = Thread(target=mediapipe_forwardpass,
-                              args=(holistic, mp_holistic, lock, q_frame, r, num_joints, joints))
+                              args=(hands, mp_hands, lock, q_frame, r, num_joints, joints))
     mediapipe_thread.start()
     print("mediapipe thread started in calibration.")
 
@@ -399,7 +400,7 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
 
     # Stop the game engine and release the capture
     # pose.close()
-    holistic.close()
+    hands.close()
     print("pose estimation object released in calibration.")
     cap.release()
     cv2.destroyAllWindows()
@@ -409,7 +410,7 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
     body_calib = np.array(body_calib)
     if not os.path.exists(drPath):
         os.makedirs(drPath)
-    np.savetxt(drPath + "Calib.txt", body_calib)
+    np.savetxt(drPath + "Calib.txt", [body_calib])
 
     print('Calibration finished. You can now train BoMI forward map.')
 
@@ -654,7 +655,9 @@ def initialize_customization(self, dr_mode, drPath, num_joints, joints):
     # mp_pose = mp.solutions.pose
     # mp_hands = mp.solutions.hands
     # pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True, smooth_landmarks=False)
-    # hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
+    mp_hands = mp.solutions.hands
+    hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
+
     mp_holistic = mp.solutions.holistic
     holistic = mp_holistic.Holistic(min_detection_confidence=0.6, min_tracking_confidence=0.6, upper_body_only=True,
                                     smooth_landmarks=False)
@@ -681,18 +684,18 @@ def initialize_customization(self, dr_mode, drPath, num_joints, joints):
 
     # initialize thread for DLC/mediapipe operations
     mediapipe_thread = Thread(target=mediapipe_forwardpass,
-                              args=(holistic, mp_holistic, lock, q_frame, r, num_joints, joints))
+                              args=(hands, mp_hands, lock, q_frame, r, num_joints, joints))
     mediapipe_thread.start()
     print("mediapipe thread started in customization.")
 
     # start thread for cursor control. in customization this is needed to programmatically change textbox values
     cursor_thread = Thread(target=cursor_customization,
-                           args=(self, r, filter_curs, holistic, cap, map, rot, scale, off))
+                           args=(self, r, filter_curs, hands, cap, map, rot, scale, off))
     cursor_thread.start()
     print("cursor control thread started in customization.")
 
 
-def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, off):
+def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off):
     """
     Function that runs in a separate thread when customization is started. A separate thread allows to concurrently
     change the values of each custom textbox in the tkinter window programmatically
@@ -840,7 +843,7 @@ def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, o
     # Once we have exited the main program loop, stop the game engine and release the capture
     pygame.quit()
     print("game engine object released in customization.")
-    holistic.close()
+    hands.close()
     print("pose estimation object released terminated in customization.")
     cap.release()
     cv2.destroyAllWindows()
@@ -985,9 +988,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
     # initialize MediaPipe Pose
     # mp_pose = mp.solutions.pose
-    # mp_hands = mp.solutions.hands
+    mp_hands = mp.solutions.hands
     # pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True, smooth_landmarks=False)
-    # hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
+    hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
     mp_holistic = mp.solutions.holistic
     holistic = mp_holistic.Holistic(min_detection_confidence=min_detection, min_tracking_confidence=min_confidence,
                                     upper_body_only=True, smooth_landmarks=False)
@@ -1019,7 +1022,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
     # initialize thread for mediapipe operations
     mediapipe_thread = Thread(target=mediapipe_forwardpass,
-                              args=(holistic, mp_holistic, lock, q_frame, r, num_joints, joints))
+                              args=(hands, mp_hands, lock, q_frame, r, num_joints, joints))
     mediapipe_thread.start()
     print("mediapipe thread started in practice.")
 
@@ -1194,7 +1197,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     pygame.quit()
     print("game engine object released in practice.")
     # pose.close()
-    holistic.close()
+    hands.close()
     print("pose estimation object released in practice.")
     cap.release()
     cv2.destroyAllWindows()
@@ -1216,7 +1219,7 @@ def get_data_from_camera(cap, q_frame, r):
     print('OpenCV thread terminated.')
 
 
-def mediapipe_forwardpass(holistic, mp_holistic, lock, q_frame, r, num_joints, joints):
+def mediapipe_forwardpass(hands, mp_hands, lock, q_frame, r, num_joints, joints):
     """
     function that runs in the thread for estimating pose online
     :param pose: object of Mediapipe class used to predict poses
@@ -1239,41 +1242,77 @@ def mediapipe_forwardpass(holistic, mp_holistic, lock, q_frame, r, num_joints, j
             image = cv2.cvtColor(cv2.flip(curr_frame, 1), cv2.COLOR_BGR2RGB)
             # To improve performance, optionally mark the image as not writeable to pass by reference.
             image.flags.writeable = False
-            results = holistic.process(image)
+            results = hands.process(image)
             # results = pose.process(image)
             # results_hands = hands.process(image)
 
-            if joints[0, 0] == 1 or joints[1, 0] == 1 or joints[2, 0] == 1:
-                if not results.pose_landmarks:
-                    continue
-                if joints[0, 0] == 1:
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.NOSE].x)
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.NOSE].y)
-                if joints[1, 0] == 1:
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_EYE].x)
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_EYE].y)
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EYE].x)
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EYE].y)
-                if joints[2, 0] == 1:
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_SHOULDER].x)
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_SHOULDER].y)
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].x)
-                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].y)
+            # if joints[0, 0] == 1 or joints[1, 0] == 1 or joints[2, 0] == 1:
+            #     if not results.pose_landmarks:
+            #         continue
+            #     if joints[0, 0] == 1:
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.NOSE].x)
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.NOSE].y)
+            #     if joints[1, 0] == 1:
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_EYE].x)
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_EYE].y)
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EYE].x)
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EYE].y)
+            #     if joints[2, 0] == 1:
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_SHOULDER].x)
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_SHOULDER].y)
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].x)
+            #         body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].y)
 
-            elif joints[3, 0] == 1 or joints[4, 0] == 1:
-                if not results.right_hand_landmarks:
+            if joints[3, 0] == 1 or joints[4, 0] == 1:
+                if not results.multi_hand_landmarks:
                     continue
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.INDEX_FINGER_TIP].x)
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.INDEX_FINGER_TIP].y)
+                body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x)
+                body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y)
                 if joints[4, 0] == 1:
-                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.THUMB_TIP].x)
-                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.THUMB_TIP].y)
-                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.MIDDLE_FINGER_TIP].x)
-                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.MIDDLE_FINGER_TIP].y)
-                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.RING_FINGER_TIP].x)
-                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.RING_FINGER_TIP].y)
-                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.PINKY_TIP].x)
-                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.PINKY_TIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.WRIST].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.WRIST].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.THUMB_CMC].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.THUMB_CMC].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.THUMB_MCP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.THUMB_MCP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.THUMB_IP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.THUMB_IP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.THUMB_TIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.THUMB_TIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_DIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_DIP].y)
+                    # Duplicates  /
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x)
+                    # Duplicates /
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_DIP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_DIP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_MCP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_MCP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_PIP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_PIP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_DIP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_DIP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_TIP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_TIP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_MCP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_MCP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_PIP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_PIP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_DIP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_DIP].y)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_TIP].x)
+                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_TIP].y)
 
             body_mp = np.array(body_list)
             q_frame.queue.clear()
