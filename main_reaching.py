@@ -75,7 +75,7 @@ class MainApplication(tk.Frame):
         self.btn_calib.pack()
         self.btn_calib.place(relx=0.05, rely=0.25, anchor='sw')
         self.btn_calib["state"] = "disabled"
-        self.calib_duration = 12000
+        self.calib_duration = 20000
 
         # set checkboxes for selecting BoMI map
         self.check_pca = BooleanVar(value=True)
@@ -221,53 +221,67 @@ class CustomizationApplication(tk.Frame):
         self.joints = joints
         self.dr_mode = dr_mode
 
-        self.lbl_rot = Label(parent, font='Times 22 bold', text='Rotation ')
-        self.lbl_rot.pack()
-        self.lbl_rot.place(relx=0.1, rely=0.2, anchor='sw')
-        self.txt_rot = Text(parent, width=10, height=1)
-        self.txt_rot.pack()
-        self.txt_rot.place(relx=0.25, rely=0.18, anchor='sw')
-        self.txt_rot.insert("1.0", '0')
+        # self.lbl_rot = Label(parent, font='Times 22 bold', text='Rotation ')
+        # self.lbl_rot.pack()
+        # self.lbl_rot.place(relx=0.1, rely=0.2, anchor='sw')
+        # self.txt_rot = Text(parent, width=10, height=1)
+        # self.txt_rot.pack()
+        # self.txt_rot.place(relx=0.25, rely=0.18, anchor='sw')
+        # self.txt_rot.insert("1.0", '0')
 
-        self.lbl_gx = Label(parent, font='Times 22 bold', text='Gain x ')
-        self.lbl_gx.place(relx=0.1, rely=0.35, anchor='sw')
+        self.lbl_gx = Label(parent, font='Times 18 bold', text='Gain Velocity 1 ')
+        self.lbl_gx.place(relx=0.02, rely=0.4, anchor='sw')
         self.txt_gx = Text(parent, width=10, height=1)
         self.txt_gx.pack()
-        self.txt_gx.place(relx=0.25, rely=0.33, anchor='sw')
+        self.txt_gx.place(relx=0.20, rely=0.35, anchor='sw')
         self.txt_gx.insert("1.0", '1')
 
-        self.lbl_gy = Label(parent, font='Times 22 bold', text='Gain y ')
-        self.lbl_gy.place(relx=0.5, rely=0.35, anchor='sw')
+        self.lbl_gy = Label(parent, font='Times 18 bold', text='Gain Velocity 2 ')
+        self.lbl_gy.place(relx=0.3, rely=0.4, anchor='sw')
         self.txt_gy = Text(parent, width=10, height=1)
         self.txt_gy.pack()
-        self.txt_gy.place(relx=0.65, rely=0.33, anchor='sw')
+        self.txt_gy.place(relx=0.55, rely=0.35, anchor='sw')
         self.txt_gy.insert("1.0", '1')
 
-        self.lbl_ox = Label(parent, font='Times 22 bold', text='Offset x ')
-        self.lbl_ox.place(relx=0.1, rely=0.5, anchor='sw')
+        self.lbl_gz = Label(parent, font='Times 18 bold', text='Gain Velocity 3 ')
+        self.lbl_gz.place(relx=0.7, rely=0.4, anchor='sw')
+        self.txt_gz = Text(parent, width=10, height=1)
+        self.txt_gz.pack()
+        self.txt_gz.place(relx=0.85, rely=0.35, anchor='sw')
+        self.txt_gz.insert("1.0", '1')
+
+        self.lbl_ox = Label(parent, font='Times 18 bold', text='Offset X ')
+        self.lbl_ox.place(relx=0.1, rely=0.55, anchor='sw')
         self.txt_ox = Text(parent, width=10, height=1)
         self.txt_ox.pack()
-        self.txt_ox.place(relx=0.25, rely=0.48, anchor='sw')
+        self.txt_ox.place(relx=0.25, rely=0.55, anchor='sw')
         self.txt_ox.insert("1.0", '0')
 
-        self.lbl_oy = Label(parent, font='Times 22 bold', text='Offset y ')
-        self.lbl_oy.place(relx=0.5, rely=0.5, anchor='sw')
+        self.lbl_oy = Label(parent, font='Times 18 bold', text='Offset Y ')
+        self.lbl_oy.place(relx=0.4, rely=0.55, anchor='sw')
         self.txt_oy = Text(parent, width=10, height=1)
         self.txt_oy.pack()
-        self.txt_oy.place(relx=0.65, rely=0.48, anchor='sw')
+        self.txt_oy.place(relx=0.55, rely=0.55, anchor='sw')
         self.txt_oy.insert("1.0", '0')
+
+        self.lbl_oz = Label(parent, font='Times 18 bold', text='Offset Z ')
+        self.lbl_oz.place(relx=0.7, rely=0.55, anchor='sw')
+        self.txt_oz = Text(parent, width=10, height=1)
+        self.txt_oz.pack()
+        self.txt_oz.place(relx=0.85, rely=0.55, anchor='sw')
+        self.txt_oz.insert("1.0", '0')
 
         self.btn_start = Button(parent, font='Times 22 bold', text="Start", command=self.customization)
         self.btn_start.pack()
-        self.btn_start.place(relx=0.85, rely=0.3, anchor='sw')
+        self.btn_start.place(relx=0.85, rely=0.2, anchor='sw')
 
         self.btn_save = Button(parent, font='Times 22 bold', text="Save parameters", command=self.save_parameters)
         self.btn_save.pack()
-        self.btn_save.place(relx=0.3, rely=0.7, anchor='sw')
+        self.btn_save.place(relx=0.3, rely=0.75, anchor='sw')
 
         self.btn_close = Button(parent, font='Times 22 bold', text="Close", command=parent.destroy)
         self.btn_close.pack()
-        self.btn_close.place(relx=0.3, rely=0.9, anchor='sw')
+        self.btn_close.place(relx=0.3, rely=0.95, anchor='sw')
 
     # functions to retrieve values of textbox programmatically
     def retrieve_txt_rot(self):
@@ -279,11 +293,17 @@ class CustomizationApplication(tk.Frame):
     def retrieve_txt_gy(self):
         return self.txt_gy.get("1.0", "end-1c")
 
+    def retrieve_txt_gz(self):
+        return self.txt_gz.get("1.0", "end-1c")
+
     def retrieve_txt_ox(self):
         return self.txt_ox.get("1.0", "end-1c")
 
     def retrieve_txt_oy(self):
         return self.txt_oy.get("1.0", "end-1c")
+
+    def retrieve_txt_oz(self):
+        return self.txt_oz.get("1.0", "end-1c")
 
     def customization(self):
         initialize_customization(self, self.dr_mode, self.drPath, self.num_joints, self.joints)
@@ -332,7 +352,7 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
     # pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True, smooth_landmarks=False)
     # hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
     mp_holistic = mp.solutions.holistic
-    holistic = mp_holistic.Holistic(min_detection_confidence=0.3, min_tracking_confidence=0.3, upper_body_only=True,
+    holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True,
                                     smooth_landmarks=False)
 
     # initialize lock for avoiding race conditions in threads
@@ -741,6 +761,10 @@ def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, o
             except:
                 gy_custom = 1.0
             try:
+                gz_custom = float(self.retrieve_txt_gz())
+            except:
+                gz_custom = 1.0
+            try:
                 ox_custom = int(self.retrieve_txt_ox())
             except:
                 ox_custom = 0
@@ -748,6 +772,10 @@ def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, o
                 oy_custom = int(self.retrieve_txt_oy())
             except:
                 oy_custom = 0
+            try:
+                oz_custom = int(self.retrieve_txt_oz())
+            except:
+                oz_custom = 0
 
             # Applying rotation
             r.crs_x = r.crs_x * np.cos(np.pi / 180 * rot_custom) - r.crs_y * np.sin(np.pi / 180 * rot_custom)
@@ -755,9 +783,11 @@ def cursor_customization(self, r, filter_curs, holistic, cap, map, rot, scale, o
             # Applying scale
             r.crs_x = r.crs_x * gx_custom
             r.crs_y = r.crs_y * gy_custom
+            r.crs_z = r.crs_z * gz_custom
             # Applying offset
             r.crs_x = r.crs_x + ox_custom
             r.crs_y = r.crs_y + oy_custom
+            r.crs_z = r.crs_y + oz_custom
 
             # Moving the paddles when the user uses the arrow keys (in case cursor gets stuck)
             # keys = pygame.key.get_pressed()
@@ -904,9 +934,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     filter_curs = FilterButter3("lowpass_4")
 
     # Defining 3 link surfaces
-    link1_orig = pygame.Surface((r.width/5, 75))
-    link2_orig = pygame.Surface((r.width/5, 75))
-    link3_orig = pygame.Surface((r.width/5, 75))
+    link1_orig = pygame.Surface((r.width/7, 75))
+    link2_orig = pygame.Surface((r.width/7, 75))
+    link3_orig = pygame.Surface((r.width/7, 75))
 
     # for making transparent background while rotating the image
     link1_orig.set_colorkey(BLACK)
@@ -1213,36 +1243,37 @@ def mediapipe_forwardpass(holistic, mp_holistic, lock, q_frame, r, num_joints, j
             # results = pose.process(image)
             # results_hands = hands.process(image)
 
-            if not results.pose_landmarks:
-                continue
-            if joints[0, 0] == 1:
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.NOSE].x)
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.NOSE].y)
-            if joints[1, 0] == 1:
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_EYE].x)
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_EYE].y)
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EYE].x)
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EYE].y)
-            if joints[2, 0] == 1:
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_SHOULDER].x)
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_SHOULDER].y)
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].x)
-                body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].y)
+            if joints[0, 0] == 1 or joints[1, 0] == 1 or joints[2, 0] == 1:
+                if not results.pose_landmarks:
+                    continue
+                if joints[0, 0] == 1:
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.NOSE].x)
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.NOSE].y)
+                if joints[1, 0] == 1:
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_EYE].x)
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_EYE].y)
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EYE].x)
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EYE].y)
+                if joints[2, 0] == 1:
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_SHOULDER].x)
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_SHOULDER].y)
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].x)
+                    body_list.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].y)
 
-            if not results.right_hand_landmarks:
-                continue
-            if joints[3, 0] == 1 or joints[4, 0] == 1:
+            elif joints[3, 0] == 1 or joints[4, 0] == 1:
+                if not results.right_hand_landmarks:
+                    continue
                 body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.INDEX_FINGER_TIP].x)
                 body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.INDEX_FINGER_TIP].y)
-            if joints[4, 0] == 1:
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.THUMB_TIP].x)
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.THUMB_TIP].y)
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.MIDDLE_FINGER_TIP].x)
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.MIDDLE_FINGER_TIP].y)
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.RING_FINGER_TIP].x)
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.RING_FINGER_TIP].y)
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.PINKY_TIP].x)
-                body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.PINKY_TIP].y)
+                if joints[4, 0] == 1:
+                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.THUMB_TIP].x)
+                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.THUMB_TIP].y)
+                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.MIDDLE_FINGER_TIP].x)
+                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.MIDDLE_FINGER_TIP].y)
+                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.RING_FINGER_TIP].x)
+                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.RING_FINGER_TIP].y)
+                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.PINKY_TIP].x)
+                    body_list.append(results.right_hand_landmarks.landmark[mp_holistic.HandLandmark.PINKY_TIP].y)
 
             body_mp = np.array(body_list)
             q_frame.queue.clear()
