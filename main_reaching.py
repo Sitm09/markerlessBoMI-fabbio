@@ -75,7 +75,7 @@ class MainApplication(tk.Frame):
         self.btn_calib.pack()
         self.btn_calib.place(relx=0.05, rely=0.25, anchor='sw')
         self.btn_calib["state"] = "disabled"
-        self.calib_duration = 20000
+        self.calib_duration = 10000
 
         # set checkboxes for selecting BoMI map
         self.check_pca = BooleanVar(value=True)
@@ -142,7 +142,7 @@ class MainApplication(tk.Frame):
             self.num_joints += 2
             self.joints[3, 0] = 1
         if fingers_enabled:
-            self.num_joints += 10
+            self.num_joints += 42
             self.joints[4, 0] = 1
         if np.sum(self.joints, axis=0) != 0:
             self.btn_calib["state"] = "normal"
@@ -221,13 +221,13 @@ class CustomizationApplication(tk.Frame):
         self.joints = joints
         self.dr_mode = dr_mode
 
-        # self.lbl_rot = Label(parent, font='Times 22 bold', text='Rotation ')
-        # self.lbl_rot.pack()
-        # self.lbl_rot.place(relx=0.1, rely=0.2, anchor='sw')
-        # self.txt_rot = Text(parent, width=10, height=1)
-        # self.txt_rot.pack()
-        # self.txt_rot.place(relx=0.25, rely=0.18, anchor='sw')
-        # self.txt_rot.insert("1.0", '0')
+        self.lbl_rot = Label(parent, font='Times 22 bold', text='Rotation ')
+        self.lbl_rot.pack()
+        self.lbl_rot.place(relx=0.1, rely=0.2, anchor='sw')
+        self.txt_rot = Text(parent, width=10, height=1)
+        self.txt_rot.pack()
+        self.txt_rot.place(relx=0.25, rely=0.18, anchor='sw')
+        self.txt_rot.insert("1.0", '0')
 
         self.lbl_gx = Label(parent, font='Times 18 bold', text='Gain Velocity 1 ')
         self.lbl_gx.place(relx=0.02, rely=0.4, anchor='sw')
@@ -352,9 +352,9 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
     # pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True, smooth_landmarks=False)
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=1)
-    mp_holistic = mp.solutions.holistic
-    holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True,
-                                    smooth_landmarks=False)
+    # mp_holistic = mp.solutions.holistic
+    # holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5, upper_body_only=True,
+    #                                 smooth_landmarks=False)
 
     # initialize lock for avoiding race conditions in threads
     lock = Lock()
@@ -410,7 +410,7 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
     body_calib = np.array(body_calib)
     if not os.path.exists(drPath):
         os.makedirs(drPath)
-    np.savetxt(drPath + "Calib.txt", [body_calib])
+    np.savetxt(drPath + "Calib.txt", body_calib)
 
     print('Calibration finished. You can now train BoMI forward map.')
 
@@ -476,7 +476,7 @@ def train_pca(calibPath, drPath):
 
     # Applying scale
     scale = [1920 / np.ptp(train_pc[:, 0]), 1080 / np.ptp(train_pc[:, 1])]
-    velocity_scale = [3 / np.ptp(velocity_pc[:, i]) for i in range(n_pc)]
+    velocity_scale = [2 / np.ptp(velocity_pc[:, i]) for i in range(n_pc)]
 
     train_pc = train_pc * scale
     velocity_pc = velocity_pc * velocity_scale
@@ -714,8 +714,10 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
 
     # Define some colors
     BLACK = (0, 0, 0)
+    RED = (255, 0, 0)
     GREEN = (0, 255, 0)
     CURSOR = (0.19 * 255, 0.65 * 255, 0.4 * 255)
+    GREY = (0.50 * 255, 0.50 * 255, 0.50 * 255)
 
     pygame.init()
 
@@ -826,7 +828,65 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
             screen.fill(BLACK)
 
             # draw cursor
-            pygame.draw.circle(screen, CURSOR, (int(r.crs_x), int(r.crs_y)), r.crs_radius)
+            # pygame.draw.circle(screen, CURSOR, (int(r.crs_x), int(r.crs_y)), r.crs_radius)
+
+            # drawing the links
+
+            # Defining 3 link surfaces
+            link1_orig = pygame.Surface((r.width / 7, 75))
+            link2_orig = pygame.Surface((r.width / 7, 75))
+            link3_orig = pygame.Surface((r.width / 7, 75))
+
+            # for making transparent background while rotating the image
+            link1_orig.set_colorkey(BLACK)
+            link2_orig.set_colorkey(BLACK)
+            link3_orig.set_colorkey(BLACK)
+
+            # fill the rectangle / surface with the color GREY
+            link1_orig.fill(GREY)
+            link2_orig.fill(GREY)
+            link3_orig.fill(GREY)
+
+            # creating a copy of original image for smooth rotation
+            link1 = link1_orig.copy()
+            link2 = link2_orig.copy()
+            link3 = link3_orig.copy()
+
+            # Defining the initial angle of rotation
+            link_rot1 = 0
+            link_rot2 = 0
+            link_rot3 = 0
+
+            # Assigning Anchor Points
+            pos1 = (size[0] / 2, size[1] * 0.85)
+
+            link1rect = link1.get_rect()
+            link2rect = link2.get_rect()
+            link3rect = link3.get_rect()
+
+            link1_anchor = (size[0] / 2, size[1] * 0.85)
+            link2_anchor = ((link1_anchor[0] + (math.cos(math.radians(link_rot1)) * link1rect.w)),
+                            link1_anchor[1] - (math.sin(math.radians(link_rot1)) * link1rect.w))
+            link3_anchor = (link2_anchor[0] + math.cos(math.radians(link_rot2)) * link2rect.w,
+                            link2_anchor[1] - (math.sin(math.radians(link_rot2)) * link2rect.w))
+            crs_anchor = (link3_anchor[0] + math.cos(math.radians(link_rot3)) * link3rect.w,
+                          link3_anchor[1] - (math.sin(math.radians(link_rot3)) * link3rect.w))
+
+            # Drawing the links between the joints
+            pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
+            pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
+            pygame.draw.line(screen, GREY, link3_anchor, crs_anchor, 4)
+
+            # Drawing the joints
+            pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
+            pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
+            pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
+            pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
+
+            # Defining how much each link rotates. Will be set by PCA later.
+            link_rot1 += r.crs_x
+            link_rot2 += r.crs_y
+            link_rot3 += r.crs_z
 
             # draw each test target
             for i in range(8):
@@ -937,9 +997,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     filter_curs = FilterButter3("lowpass_4")
 
     # Defining 3 link surfaces
-    link1_orig = pygame.Surface((r.width/7, 75))
-    link2_orig = pygame.Surface((r.width/7, 75))
-    link3_orig = pygame.Surface((r.width/7, 75))
+    link1_orig = pygame.Surface((r.width/5, 75))
+    link2_orig = pygame.Surface((r.width/5, 75))
+    link3_orig = pygame.Surface((r.width/5, 75))
 
     # for making transparent background while rotating the image
     link1_orig.set_colorkey(BLACK)
@@ -955,11 +1015,6 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     link1 = link1_orig.copy()
     link2 = link2_orig.copy()
     link3 = link3_orig.copy()
-
-    # Creating a rectangle around the link to perform vector math and rotate off center
-    link1.set_colorkey(BLACK)
-    link2.set_colorkey(BLACK)
-    link3.set_colorkey(BLACK)
 
     # Defining the initial angle of rotation
     link_rot1 = 0
@@ -1266,8 +1321,8 @@ def mediapipe_forwardpass(hands, mp_hands, lock, q_frame, r, num_joints, joints)
             if joints[3, 0] == 1 or joints[4, 0] == 1:
                 if not results.multi_hand_landmarks:
                     continue
-                body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x)
-                body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y)
+                # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x)
+                # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y)
                 if joints[4, 0] == 1:
                     body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.WRIST].x)
                     body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.WRIST].y)
@@ -1285,34 +1340,32 @@ def mediapipe_forwardpass(hands, mp_hands, lock, q_frame, r, num_joints, joints)
                     body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP].y)
                     body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_DIP].x)
                     body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_DIP].y)
-                    # Duplicates  /
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x)
-                    # Duplicates /
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_DIP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_DIP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_MCP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_MCP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_PIP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_PIP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_DIP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_DIP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_TIP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_TIP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_MCP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_MCP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_PIP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_PIP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_DIP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_DIP].y)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_TIP].x)
-                    # body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_TIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_PIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_DIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_DIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_MCP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_MCP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_PIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_PIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_DIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_DIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_TIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.RING_FINGER_TIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_MCP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_MCP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_PIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_PIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_DIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_DIP].y)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_TIP].x)
+                    body_list.append(results.multi_hand_landmarks[0].landmark[mp_hands.HandLandmark.PINKY_TIP].y)
 
             body_mp = np.array(body_list)
             q_frame.queue.clear()

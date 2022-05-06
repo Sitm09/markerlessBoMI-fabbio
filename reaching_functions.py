@@ -119,7 +119,7 @@ def update_cursor_position_custom_3links(body, map, rot, scale, off):
     # Applying offset
     cu = cu + off
 
-    return cu[0], cu[1]
+    return cu[0], cu[1], cu[2]
 
 ## add cu[2]
 
