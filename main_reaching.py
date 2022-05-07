@@ -729,6 +729,11 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
     screen = pygame.display.set_mode(size)
     # screen = pygame.display.toggle_fullscreen()
 
+    # Defining the initial angle of rotation
+    link_rot1 = 0
+    link_rot2 = 0
+    link_rot3 = 0
+
     # -------- Main Program Loop -----------
     while not r.is_terminated:
         # --- Main event loop
@@ -745,6 +750,7 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
             # Copy old cursor position
             r.old_crs_x = r.crs_x
             r.old_crs_y = r.crs_y
+            r.old_crs_z = r.crs_z
 
             # get current value of body
             r.body = np.copy(body)
@@ -792,7 +798,7 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
             # Applying offset
             r.crs_x = r.crs_x + ox_custom
             r.crs_y = r.crs_y + oy_custom
-            r.crs_z = r.crs_y + oz_custom
+            r.crs_z = r.crs_z + oz_custom
 
             # Moving the paddles when the user uses the arrow keys (in case cursor gets stuck)
             # keys = pygame.key.get_pressed()
@@ -819,7 +825,7 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
             '''
 
             # Filter the cursor
-            r.crs_x, r.crs_y = reaching_functions.filter_cursor(r, filter_curs)
+            # r.crs_x, r.crs_y = reaching_functions.filter_cursor(r, filter_curs)
 
             # Set target position to update the GUI
             reaching_functions.set_target_reaching_customization(r)
@@ -851,11 +857,6 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
             link1 = link1_orig.copy()
             link2 = link2_orig.copy()
             link3 = link3_orig.copy()
-
-            # Defining the initial angle of rotation
-            link_rot1 = 0
-            link_rot2 = 0
-            link_rot3 = 0
 
             # Assigning Anchor Points
             pos1 = (size[0] / 2, size[1] * 0.85)
@@ -893,6 +894,24 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
                 tgt_x = r.tgt_x_list[r.list_tgt[i]]
                 tgt_y = r.tgt_y_list[r.list_tgt[i]]
                 pygame.draw.circle(screen, GREEN, (int(tgt_x), int(tgt_y)), r.tgt_radius, 2)
+
+            # Display scores:
+            font = pygame.font.Font(None, 50)
+            text = font.render(str(r.score), True, RED)
+            screen.blit(text, (1250, 10))
+
+            # Debugging purposes. Displaying information online
+            deg1 = font.render(str(r.crs_x), True, RED)
+            deg2 = font.render(str(r.crs_y), True, RED)
+            deg3 = font.render(str(r.crs_z), True, RED)
+            x_coord = font.render(str(r.crs_anchor_x), True, GREEN)
+            y_coord = font.render(str(r.crs_anchor_y), True, GREEN)
+            screen.blit(deg1, (15, 10))
+            screen.blit(deg2, (15, 60))
+            screen.blit(deg3, (15, 110))
+            screen.blit(x_coord, (15, 160))
+            screen.blit(y_coord, (15, 210))
+
 
             # --- update the screen with what we've drawn.
             pygame.display.flip()
