@@ -1,6 +1,7 @@
 import os
 import numpy as np
 
+
 class Reaching:
     """
     Class that contains all the parameters for handling the reaching task
@@ -13,6 +14,7 @@ class Reaching:
         self._crs_radius = 15
         self._tgt_radius = 45
         self._tgt_dist = 378
+        self._link_length = self._width / 6.4  # 300 pixels long
 
         # Reaching parameters (from c# Baseform)
         self._tot_blocks = 11
@@ -35,6 +37,7 @@ class Reaching:
         self._is_terminated = False
         self._is_paused = False
         self._is_blind = 0
+        self._is_vision = 1
         self._at_home = 1
         self._count_mouse = 0
         self._crs_x = self._width / 2
@@ -78,6 +81,10 @@ class Reaching:
     @property
     def tgt_dist(self):
         return self._tgt_dist
+
+    @property
+    def link_length(self):
+        return self._link_length
 
     # Reaching parameters (from c# Baseform)
 
@@ -177,6 +184,14 @@ class Reaching:
     @is_blind.setter
     def is_blind(self, value):
         self._is_blind = value
+
+    @property
+    def is_vision(self):
+        return self._is_vision
+
+    @is_vision.setter
+    def is_vision(self, value):
+        self._is_vision = value
 
     @property
     def at_home(self):

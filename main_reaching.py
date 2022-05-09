@@ -43,6 +43,7 @@ class MainApplication(tk.Frame):
         self.num_joints = 0
         self.joints = np.zeros((5, 1))
         self.dr_mode = 'pca'
+        self.vision = 'min'
 
         # set checkboxes for selecting joints
         self.check_nose = BooleanVar()
@@ -75,7 +76,7 @@ class MainApplication(tk.Frame):
         self.btn_calib.pack()
         self.btn_calib.place(relx=0.05, rely=0.25, anchor='sw')
         self.btn_calib["state"] = "disabled"
-        self.calib_duration = 10000
+        self.calib_duration = 20000
 
         # set checkboxes for selecting BoMI map
         self.check_pca = BooleanVar(value=True)
@@ -123,6 +124,11 @@ class MainApplication(tk.Frame):
         self.check1 = Checkbutton(tk_window, font='Times 22 bold', text="Mouse control", variable=self.check_mouse)
         self.check1.place(relx=0.35, rely=0.5, anchor='sw')
 
+        # setting toggle button for vision (default is minimal vision)
+        self.check_vision = BooleanVar()
+        self.check_vision1 = Checkbutton(tk_window, font='Times 20 bold', text="Vision", variable=self.check_vision)
+        self.check_vision1.place(relx=0.55, rely=0.3, anchor='sw')
+
     def select_joints(self):
         nose_enabled = self.check_nose.get()
         eyes_enabled = self.check_eyes.get()
@@ -150,6 +156,17 @@ class MainApplication(tk.Frame):
             self.btn_custom["state"] = "normal"
             self.btn_start["state"] = "normal"
             print('Joints correctly selected.')
+
+        # check if minimal vision or complete vision. Will separate into folders later
+        vision_enabled = self.check_vision.get()
+        if vision_enabled:
+            self.vision = 'max'
+            print('Group Selected: CV')
+        else:
+            self.vision = 'min'
+            print('Group Selected: MV')
+
+
 
     def calibration(self):
         # start calibration dance - collect webcam data
@@ -188,7 +205,7 @@ class MainApplication(tk.Frame):
             self.newWindow = tk.Toplevel(self.master)
             self.newWindow.geometry("1000x500")
             self.app = CustomizationApplication(self.newWindow, self, drPath=self.drPath, num_joints=self.num_joints,
-                                                joints=self.joints, dr_mode=self.dr_mode)
+                                                joints=self.joints, dr_mode=self.dr_mode, vision=self.vision)
         else:
             self.w = popupWindow(self.master, "Compute BoMI map first.")
             self.master.wait_window(self.w.top)
@@ -212,7 +229,7 @@ class CustomizationApplication(tk.Frame):
     class that defines the customization tkinter window
     """
 
-    def __init__(self, parent, mainTk, drPath, num_joints, joints, dr_mode):
+    def __init__(self, parent, mainTk, drPath, num_joints, joints, dr_mode, vision):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.mainTk = mainTk
@@ -220,6 +237,7 @@ class CustomizationApplication(tk.Frame):
         self.num_joints = num_joints
         self.joints = joints
         self.dr_mode = dr_mode
+        self.vision = vision
 
         self.lbl_rot = Label(parent, font='Times 22 bold', text='Rotation ')
         self.lbl_rot.pack()
@@ -306,7 +324,7 @@ class CustomizationApplication(tk.Frame):
         return self.txt_oz.get("1.0", "end-1c")
 
     def customization(self):
-        initialize_customization(self, self.dr_mode, self.drPath, self.num_joints, self.joints)
+        initialize_customization(self, self.dr_mode, self.drPath, self.num_joints, self.joints, self.vision)
 
     def save_parameters(self):
         save_parameters(self, self.drPath)
@@ -632,7 +650,7 @@ def load_bomi_map(dr_mode, drPath):
     return map
 
 
-def initialize_customization(self, dr_mode, drPath, num_joints, joints):
+def initialize_customization(self, dr_mode, drPath, num_joints, joints, vision):
     """
     initialize objects needed for online cursor control. Start all the customization threads as well
     :param self: CustomizationApplication tkinter Frame. needed to retrieve textbox values programmatically
@@ -647,6 +665,8 @@ def initialize_customization(self, dr_mode, drPath, num_joints, joints):
 
     # initialize target position
     reaching_functions.initialize_targets(r)
+
+    # Doing this for threading at the end of this function
 
     # load BoMI forward map parameters for converting body landmarks into cursor coordinates
     map = load_bomi_map(dr_mode, drPath)
@@ -690,12 +710,12 @@ def initialize_customization(self, dr_mode, drPath, num_joints, joints):
 
     # start thread for cursor control. in customization this is needed to programmatically change textbox values
     cursor_thread = Thread(target=cursor_customization,
-                           args=(self, r, filter_curs, hands, cap, map, rot, scale, off))
+                           args=(self, r, filter_curs, hands, cap, map, rot, scale, off, vision))
     cursor_thread.start()
     print("cursor control thread started in customization.")
 
 
-def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off):
+def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off, vision):
     """
     Function that runs in a separate thread when customization is started. A separate thread allows to concurrently
     change the values of each custom textbox in the tkinter window programmatically
@@ -704,6 +724,8 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
     :param pose: object of the Pose class for performing online pose estimation
     :param cap: object of the OpenCV class for collecting webcam data
     :param filter_curs: object of FilterButter3 for online filtering of the cursor
+    :param hands: object of FilterButter3 for online filtering of the cursor
+    :param check_vision: checks to see
     :param ws: list of the AE weights
     :param bs: list of the AE biases
     :param rot: rotation of the latent space defined after AE training
@@ -724,7 +746,7 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
     # The clock will be used to control how fast the screen updates
     clock = pygame.time.Clock()
 
-    # Open a new window
+     # Open a new window
     size = (r.width, r.height)
     screen = pygame.display.set_mode(size)
     # screen = pygame.display.toggle_fullscreen()
@@ -733,6 +755,11 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
     link_rot1 = 0
     link_rot2 = 0
     link_rot3 = 0
+
+    # Defining 3 link surfaces and length of links
+    link1_orig = pygame.Surface((r.link_length, 75))
+    link2_orig = pygame.Surface((r.link_length, 75))
+    link3_orig = pygame.Surface((r.link_length, 75))
 
     # -------- Main Program Loop -----------
     while not r.is_terminated:
@@ -838,11 +865,6 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
 
             # drawing the links
 
-            # Defining 3 link surfaces
-            link1_orig = pygame.Surface((r.width / 7, 75))
-            link2_orig = pygame.Surface((r.width / 7, 75))
-            link3_orig = pygame.Surface((r.width / 7, 75))
-
             # for making transparent background while rotating the image
             link1_orig.set_colorkey(BLACK)
             link2_orig.set_colorkey(BLACK)
@@ -873,16 +895,19 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
             crs_anchor = (link3_anchor[0] + math.cos(math.radians(link_rot3)) * link3rect.w,
                           link3_anchor[1] - (math.sin(math.radians(link_rot3)) * link3rect.w))
 
-            # Drawing the links between the joints
-            pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
-            pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
-            pygame.draw.line(screen, GREY, link3_anchor, crs_anchor, 4)
+            if vision == 'max':
 
-            # Drawing the joints
-            pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
-            pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
-            pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
-            pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
+                pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
+                pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
+                pygame.draw.line(screen, GREY, link3_anchor, crs_anchor, 4)
+
+                # Drawing the joints
+                pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
+                pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
+                pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
+                pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
+            elif vision == 'min':
+                pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
 
             # Defining how much each link rotates. Will be set by PCA later.
             link_rot1 += r.crs_x
@@ -956,37 +981,6 @@ def save_parameters(self, drPath):
 
     print('Customization values have been saved. You can continue with practice.')
 
-def blitRotate(surf, image, pos, originPos, angle):
-
-    """"
-    function to rotate the links from a pivot point off-center the image
-    :param surf: the target Surface
-    :param image: the Surface which has to be rotated and blit
-    :param pos: the position of the pivot on the target Surface surf (relative to the top left of surf)
-    :param originPos: position of the pivot on the image Surface (relative to the top left of image)
-    :param angle: the angle of rotation in degrees
-    :return:
-    """
-    # offset from pivot to center
-    image_rect = image.get_rect(topleft=(pos[0] - originPos[0], pos[1] - originPos[1]))
-    offset_center_to_pivot = pygame.math.Vector2(pos) - image_rect.center
-
-    # roatated offset from pivot to center
-    rotated_offset = offset_center_to_pivot.rotate(-angle)
-
-    # roatetd image center
-    rotated_image_center = (pos[0] - rotated_offset.x, pos[1] - rotated_offset.y)
-
-    # get a rotated image
-    rotated_image = pygame.transform.rotate(image, angle)
-    rotated_image_rect = rotated_image.get_rect(center=rotated_image_center)
-
-    # rotate and blit the image
-    surf.blit(rotated_image, rotated_image_rect)
-
-    # draw rectangle around the image
-    pygame.draw.rect(surf, (255, 0, 0), (*rotated_image_rect.topleft, *rotated_image.get_size()), 2)
-
 def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     """
     function to perform online cursor control - practice
@@ -1019,9 +1013,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     filter_curs = FilterButter3("lowpass_4")
 
     # Defining 3 link surfaces
-    link1_orig = pygame.Surface((r.width/5, 75))
-    link2_orig = pygame.Surface((r.width/5, 75))
-    link3_orig = pygame.Surface((r.width/5, 75))
+    link1_orig = pygame.Surface((r.link_length, 75))
+    link2_orig = pygame.Surface((r.link_length, 75))
+    link3_orig = pygame.Surface((r.link_length, 75))
 
     # for making transparent background while rotating the image
     link1_orig.set_colorkey(BLACK)
@@ -1242,9 +1236,9 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 screen.blit(text, (1250, 10))
 
                 # Debugging purposes. Displaying information online
-                deg1 = font.render(str(r.crs_x), True, RED)
-                deg2 = font.render(str(r.crs_y), True, RED)
-                deg3 = font.render(str(r.crs_z), True, RED)
+                deg1 = font.render("{:.3f}".format(r.crs_x), True, RED)
+                deg2 = font.render("{:.3f}".format(r.crs_y), True, RED)
+                deg3 = font.render("{:.3f}".format(r.crs_z), True, RED)
                 x_coord = font.render(str(r.crs_anchor_x), True, GREEN)
                 y_coord = font.render(str(r.crs_anchor_y), True, GREEN)
                 screen.blit(deg1, (15, 10))
