@@ -900,10 +900,13 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off)
             text = font.render(str(r.score), True, RED)
             screen.blit(text, (1250, 10))
 
+
+
             # Debugging purposes. Displaying information online
-            deg1 = font.render(str(r.crs_x), True, RED)
-            deg2 = font.render(str(r.crs_y), True, RED)
-            deg3 = font.render(str(r.crs_z), True, RED)
+
+            deg1 = font.render("{:.3f}".format(r.crs_x), True, RED)
+            deg2 = font.render("{:.3f}".format(r.crs_y), True, RED)
+            deg3 = font.render("{:.3f}".format(r.crs_z), True, RED)
             x_coord = font.render(str(r.crs_anchor_x), True, GREEN)
             y_coord = font.render(str(r.crs_anchor_y), True, GREEN)
             screen.blit(deg1, (15, 10))
