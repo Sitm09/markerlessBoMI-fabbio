@@ -76,7 +76,7 @@ class MainApplication(tk.Frame):
         self.btn_calib.pack()
         self.btn_calib.place(relx=0.05, rely=0.25, anchor='sw')
         self.btn_calib["state"] = "disabled"
-        self.calib_duration = 20000
+        self.calib_duration = 30000
 
         # set checkboxes for selecting BoMI map
         self.check_pca = BooleanVar(value=True)
@@ -725,7 +725,7 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off,
     :param cap: object of the OpenCV class for collecting webcam data
     :param filter_curs: object of FilterButter3 for online filtering of the cursor
     :param hands: object of FilterButter3 for online filtering of the cursor
-    :param check_vision: checks to see
+    :param vision: checks to see if links should be displayed or not
     :param ws: list of the AE weights
     :param bs: list of the AE biases
     :param rot: rotation of the latent space defined after AE training
@@ -838,19 +838,6 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off,
             # if keys[pygame.K_d]:
             #     r.crs_x += 75
 
-            # Check if the crs is bouncing against any of the 4 walls:
-
-            ''' # Limit cursor workspace
-            if r.crs_x >= r.width:
-                r.crs_x = r.width
-            if r.crs_x <= 0:
-                r.crs_x = 0
-            if r.crs_y >= r.height:
-                r.crs_y = 0
-            if r.crs_y <= 0:
-                r.crs_y = r.height
-            '''
-
             # Filter the cursor
             # r.crs_x, r.crs_y = reaching_functions.filter_cursor(r, filter_curs)
 
@@ -909,6 +896,16 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off,
             elif vision == 'min':
                 pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
 
+            # Drawing a hologram of the cursor if cursor currently outside the window boundaries
+            if crs_anchor[1] > r.height:
+                pygame.draw.circle(screen, GREY, (crs_anchor[0], r.height), r.crs_radius * 1.25, width=2)
+            if crs_anchor[1] < 0:
+                pygame.draw.circle(screen, GREY, (crs_anchor[0], 0), r.crs_radius * 1.25, width=2)
+            if crs_anchor[0] > r.width:
+                pygame.draw.circle(screen, GREY, (r.width, crs_anchor[1]), r.crs_radius * 1.25, width=2)
+            if crs_anchor[0] < 0:
+                pygame.draw.circle(screen, GREY, (0, crs_anchor[1]), r.crs_radius * 1.25, width=2)
+
             # Defining how much each link rotates. Will be set by PCA later.
             link_rot1 += r.crs_x
             link_rot2 += r.crs_y
@@ -925,10 +922,7 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off,
             text = font.render(str(r.score), True, RED)
             screen.blit(text, (1250, 10))
 
-
-
             # Debugging purposes. Displaying information online
-
             deg1 = font.render("{:.3f}".format(r.crs_x), True, RED)
             deg2 = font.render("{:.3f}".format(r.crs_y), True, RED)
             deg3 = font.render("{:.3f}".format(r.crs_z), True, RED)
@@ -1229,6 +1223,10 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                         pygame.draw.circle(screen, GREEN, (int(r.tgt_x), int(r.tgt_y)), r.tgt_radius, 2)
                     else:  # yellow if not blind
                         pygame.draw.circle(screen, YELLOW, (int(r.tgt_x), int(r.tgt_y)), r.tgt_radius, 2)
+
+                # Drawing a hologram of the cursor if outside the boundaries
+                if crs_anchor[1] > r.height:
+                    pygame.draw.circle(screen, GREY, (crs_anchor[0], r.height), r.crs_radius * 1.25, width=2)
 
                 # Display scores:
                 font = pygame.font.Font(None, 50)

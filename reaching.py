@@ -14,7 +14,7 @@ class Reaching:
         self._crs_radius = 15
         self._tgt_radius = 45
         self._tgt_dist = 378
-        self._link_length = self._width / 6.4  # 300 pixels long
+        self._link_length = self._width / 6.4  # 300 pixels long (6.4)
 
         # Reaching parameters (from c# Baseform)
         self._tot_blocks = 11
