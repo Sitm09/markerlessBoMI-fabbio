@@ -921,6 +921,14 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off,
             link_rot2 += r.crs_y
             link_rot3 += r.crs_z
 
+            if link_rot1 > 360: link_rot1 = link_rot1 - 360
+            if link_rot2 > 360: link_rot2 = link_rot2 - 360
+            if link_rot3 > 360: link_rot3 = link_rot3 - 360
+
+            if link_rot1 < 0: link_rot1 = link_rot1 + 360
+            if link_rot2 < 0: link_rot2 = link_rot2 + 360
+            if link_rot3 < 0: link_rot3 = link_rot3 + 360
+
             # draw each test target
             for i in range(8):
                 tgt_x = r.tgt_x_list[r.list_tgt[i]]
@@ -933,16 +941,22 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off,
             screen.blit(text, (1250, 10))
 
             # Debugging purposes. Displaying information online
-            deg1 = font.render("{:.3f}".format(r.crs_x), True, RED)
-            deg2 = font.render("{:.3f}".format(r.crs_y), True, RED)
-            deg3 = font.render("{:.3f}".format(r.crs_z), True, RED)
+            vel1 = font.render("{:.3f}".format(r.crs_x), True, RED)
+            vel2 = font.render("{:.3f}".format(r.crs_y), True, RED)
+            vel3 = font.render("{:.3f}".format(r.crs_z), True, RED)
+            deg1 = font.render("{:.3f}".format(link_rot1), True, RED)
+            deg2 = font.render("{:.3f}".format(link_rot2), True, RED)
+            deg3 = font.render("{:.3f}".format(link_rot3), True, RED)
             x_coord = font.render(str(r.crs_anchor_x), True, GREEN)
             y_coord = font.render(str(r.crs_anchor_y), True, GREEN)
-            screen.blit(deg1, (15, 10))
-            screen.blit(deg2, (15, 60))
-            screen.blit(deg3, (15, 110))
-            screen.blit(x_coord, (15, 160))
-            screen.blit(y_coord, (15, 210))
+            screen.blit(vel1, (15, 10))
+            screen.blit(vel2, (15, 60))
+            screen.blit(vel3, (15, 110))
+            screen.blit(deg1, (15, 160))
+            screen.blit(deg2, (15, 210))
+            screen.blit(deg3, (15, 260))
+            screen.blit(x_coord, (15, 310))
+            screen.blit(y_coord, (15, 320))
 
 
             # --- update the screen with what we've drawn.
