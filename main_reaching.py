@@ -12,7 +12,7 @@ import queue
 import cv2
 # For GUI
 import tkinter as tk
-from tkinter import Label, Button, BooleanVar, Checkbutton, Text
+from tkinter import Label, Button, BooleanVar, Checkbutton, Text, Entry
 # For pygame
 import pygame
 # For reaching task
@@ -38,8 +38,8 @@ class MainApplication(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.calibPath = os.path.dirname(os.path.abspath(__file__)) + "/calib/"
         self.drPath = ''
+
         self.num_joints = 0
         self.joints = np.zeros((5, 1))
         self.dr_mode = 'pca'
@@ -76,7 +76,7 @@ class MainApplication(tk.Frame):
         self.btn_calib.pack()
         self.btn_calib.place(relx=0.05, rely=0.25, anchor='sw')
         self.btn_calib["state"] = "disabled"
-        self.calib_duration = 30000
+        self.calib_duration = 5000
 
         # set checkboxes for selecting BoMI map
         self.check_pca = BooleanVar(value=True)
@@ -124,10 +124,14 @@ class MainApplication(tk.Frame):
         self.check1 = Checkbutton(tk_window, font='Times 22 bold', text="Mouse control", variable=self.check_mouse)
         self.check1.place(relx=0.35, rely=0.5, anchor='sw')
 
-        # setting toggle button for vision (default is minimal vision)
+        # setting toggle checkbox for vision (default is minimal vision)
         self.check_vision = BooleanVar()
         self.check_vision1 = Checkbutton(tk_window, font='Times 20 bold', text="Vision", variable=self.check_vision)
         self.check_vision1.place(relx=0.55, rely=0.3, anchor='sw')
+
+        # set ID Entry Box for subject record keeping and identification
+        self.subID = Entry(tk_window, font='Times 20 bold', width='3')
+        self.subID.place(relx=0.35, rely=0.2, anchor='sw')
 
     def select_joints(self):
         nose_enabled = self.check_nose.get()
@@ -150,23 +154,29 @@ class MainApplication(tk.Frame):
         if fingers_enabled:
             self.num_joints += 42
             self.joints[4, 0] = 1
-        if np.sum(self.joints, axis=0) != 0:
+
+        # setting calibration pathway
+        self.calibPath = os.path.dirname(os.path.abspath(__file__)) + "/" + self.vision.upper() + "/" + \
+            self.subID.get() + "/calib/"
+
+        # error checking to make sure all fields are filled in
+        if np.sum(self.joints, axis=0) != 0 and self.subID.get() != "":
             self.btn_calib["state"] = "normal"
             self.btn_map["state"] = "normal"
             self.btn_custom["state"] = "normal"
             self.btn_start["state"] = "normal"
-            print('Joints correctly selected.')
+            print('Joints correctly selected.\nSubject ID: ' + self.subID.get())
 
         # check if minimal vision or complete vision. Will separate into folders later
         vision_enabled = self.check_vision.get()
         if vision_enabled:
             self.vision = 'max'
-            print('Group Selected: CV')
+            print('Group Selected: CV)')
+            print(self.calibPath)
         else:
             self.vision = 'min'
             print('Group Selected: MV')
-
-
+            print(self.calibPath)
 
     def calibration(self):
         # start calibration dance - collect webcam data
