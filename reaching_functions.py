@@ -10,8 +10,15 @@ def write_header(r):
     if not os.path.exists(r.path_log):
         os.mkdir(r.path_log)
 
-    header = "time\tnose_x\tnose_y\tr_shoulder_x\tr_shoulder_y\tl_shoulder_x\tl_shooulder_t\tcursor_x\tcursor_y\tblock\t"\
-             "repetition\ttarget\ttrial\tstate\tcomeback\tis_blind\tat_home\tcount_mouse\tscore\n"
+    header = "time\twrist_x\twrist_y\tthumb_cmc_x\tthumb_cmc_y\tthumb_mcp_x\tthumb_mcp_y\tthumb_ip_x\tthump_ip_y\t"\
+             "thumb_tip_x\tthumb_tip_y\tindex_finger_mcp_x\tindex_finger_mcp_y\tindex_finger_pip_x\tindex_finger_pip_y"\
+             "\tindex_finger_dip_x\tindex_finger_dip_y\tindex_finger_tip_x\tindex_finger_tip_y\tmiddle_finger_mcp_x\t"\
+             "middle_finger_mcp_y\tmiddle_finger_pip_x\tmiddle_finger_pip_y\tmiddle_finger_dip_x\tmiddle_finger_dip_y"\
+             "\tmiddle_finger_tip_x\tmiddle_finger_tip_y\tring_finger_mcp_x\tring_finger_mcp_y\tring_finger_pip_x\t"\
+             "ring_finger_pip_y\tring_finger_dip_x\tring_finger_dip_y\tring_finger_tip_x\tring_finger_tip_y\t" \
+             "pinky_mcp_x\tpinky_mcp_y\tpinky_pip_x\tpinky_pip_y\tpinky_dip_x\tpinky_dip_y\tpinky_tip_x\tpinky_tip_y\t"\
+             "theta1\ttheta2\ttheta3\tomega1\tomega2\tomega3\t"\
+             "block\trepetition\ttarget\ttrial\tstate\tcomeback\tis_blind\tat_home\tcount_mouse\tscore\n"
     with open(r.path_log + "PracticeLog.txt", "w+") as file_log:
         file_log.write(header)
 
@@ -173,10 +180,11 @@ def update_degrees(body, map, rot_ae, scale_ae, off_ae, rot_custom, scale_custom
 
 def write_practice_files(r, body, timer_practice):
 
-    log = str(timer_practice.elapsed_time) + "\t" + '\t'.join(map(str, body)) + "\t" + str(r.crs_x) + "\t" + str(r.crs_y) + "\t" + str(r.block) + "\t" + \
-          str(r.repetition) + "\t" + str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + \
-          str(r.comeback) + "\t" + str(r.is_blind) + "\t" + str(r.at_home) + "\t" + str(r.count_mouse) + "\t" + \
-          str(r.score) + "\n"
+    log = str(timer_practice.elapsed_time) + "\t" + '\t'.join(map(str, body)) + "\t" + str(r.theta1) + "\t" + \
+          str(r.theta2) + "\t" + str(r.theta3) + "\t" + str(r.crs_x) + "\t" + \
+          str(r.crs_y) + "\t" + str(r.crs_z) + "\t" + str(r.block) + "\t" + str(r.repetition) + "\t" + \
+          str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + "\t" + str(r.is_blind) +\
+          "\t" + str(r.at_home) + "\t" + str(r.count_mouse) + "\t" + str(r.score) + "\n"
 
     with open(r.path_log + "PracticeLog.txt", "a") as file_log:
         file_log.write(log)

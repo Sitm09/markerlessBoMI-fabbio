@@ -1217,10 +1217,22 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
                 # First, clear the screen to black. In between screen.fill and pygame.display.flip() all the draw
                 screen.fill(BLACK)
 
-                # Defining how much each link rotates. Will be set by PCA later.
+                # Defining how much each link rotates via PCA
                 link_rot1 += r.crs_x
                 link_rot2 += r.crs_y
                 link_rot3 += r.crs_z
+
+                if link_rot1 > 360: link_rot1 = link_rot1 - 360
+                if link_rot2 > 360: link_rot2 = link_rot2 - 360
+                if link_rot3 > 360: link_rot3 = link_rot3 - 360
+
+                if link_rot1 < 0: link_rot1 = link_rot1 + 360
+                if link_rot2 < 0: link_rot2 = link_rot2 + 360
+                if link_rot3 < 0: link_rot3 = link_rot3 + 360
+
+                r.theta1 = link_rot1
+                r.theta2 = link_rot2
+                r.theta3 = link_rot3
 
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
                 if not r.is_blind:

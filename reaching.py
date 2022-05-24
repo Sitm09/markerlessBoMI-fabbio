@@ -43,6 +43,9 @@ class Reaching:
         self._crs_x = self._width / 2
         self._crs_y = self._height / 2
         self._crs_z = self._velocity3
+        self._theta1 = 0
+        self._theta2 = 0
+        self._theta3 = 0
         self._crs_anchor_x = self._width / 2
         self._crs_anchor_y = self._height / 2
         self._old_crs_x = self._crs_x
@@ -240,6 +243,30 @@ class Reaching:
     @crs_z.setter
     def crs_z(self, value):
         self._crs_z = value
+
+    @property
+    def theta1(self):
+        return self._theta1
+
+    @theta1.setter
+    def theta1(self, value):
+        self._theta1 = value
+
+    @property
+    def theta2(self):
+        return self._theta2
+
+    @theta2.setter
+    def theta2(self, value):
+        self._theta2 = value
+
+    @property
+    def theta3(self):
+        return self._theta3
+
+    @theta3.setter
+    def theta3(self, value):
+        self._theta3 = value
 
     @property
     def crs_anchor_x(self):
