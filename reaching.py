@@ -57,8 +57,11 @@ class Reaching:
         self._tgt_x_list = []
         self._tgt_y_list = []
 
-        # file parameters
-        self._path_log = os.path.dirname(os.path.abspath(__file__)) + "/Practice/"
+        # file parameters and subject information
+        self._path_log = os.path.dirname(os.path.abspath(__file__)) + "/Results"
+        self._subject_ID = 0
+        self._day = 0
+        self._epoch = 0
 
     # pygame parameters
     @property
@@ -330,12 +333,38 @@ class Reaching:
     def empty_tgt_y_list(self):
         self._tgt_y_list = []
 
-    # File parameters
+    # File parameters and subject information
     @property
     def path_log(self):
         return self._path_log
 
+    @path_log.setter
+    def path_log(self, value):
+        self._path_log = value
 
+    @property
+    def subject_ID(self):
+        return self._subject_ID
+
+    @subject_ID.setter
+    def subject_ID(self, value):
+        self._subject_ID = value
+
+    @property
+    def day(self):
+        return self._day
+
+    @day.setter
+    def day(self, value):
+        self._day = value
+
+    @property
+    def epoch(self):
+        return self._epoch
+
+    @epoch.setter
+    def epoch(self, value):
+        self._epoch = value
 
 
 

@@ -134,6 +134,9 @@ class MainApplication(tk.Frame):
         self.subID.place(relx=0.35, rely=0.2, anchor='sw')
 
     def select_joints(self):
+
+        r = Reaching()
+
         nose_enabled = self.check_nose.get()
         eyes_enabled = self.check_eyes.get()
         shoulders_enabled = self.check_shoulders.get()
@@ -155,9 +158,7 @@ class MainApplication(tk.Frame):
             self.num_joints += 42
             self.joints[4, 0] = 1
 
-        # setting calibration pathway
-        self.calibPath = os.path.dirname(os.path.abspath(__file__)) + "/" + self.vision.upper() + "/" + \
-            self.subID.get() + "/calib/"
+        r.subject_ID = self.subID.get()
 
         # error checking to make sure all fields are filled in
         if np.sum(self.joints, axis=0) != 0 and self.subID.get() != "":
@@ -165,16 +166,30 @@ class MainApplication(tk.Frame):
             self.btn_map["state"] = "normal"
             self.btn_custom["state"] = "normal"
             self.btn_start["state"] = "normal"
-            print('Joints correctly selected.\nSubject ID: ' + self.subID.get())
+            # print('Joints correctly selected.\nSubject ID: ' + self.subID.get())
+            print('Joints correctly selected.\nSubject ID: ' + r.subject_ID)
+
+        # setting calibration pathway
+        if self.check_vision.get():
+            r.is_vision = 1
+            group = "CompleteVision"
+        else:
+            r.is_vision = 0
+            group = "MinimalVision"
+
+        # r.path_log = os.path.dirname(os.path.abspath(__file__)) + "/Results/" + group + "/" + self.subID.get()
+        r.path_log = os.path.dirname(os.path.abspath(__file__)) + "/Results/" + group + "/" + r.subject_ID
+
+        self.calibPath = r.path_log + "/calib/"
 
         # check if minimal vision or complete vision. Will separate into folders later
         vision_enabled = self.check_vision.get()
         if vision_enabled:
-            self.vision = 'max'
-            print('Group Selected: CV)')
+            self.vision = 'CompleteVision'
+            print('Group Selected: CV')
             print(self.calibPath)
         else:
-            self.vision = 'min'
+            self.vision = 'MinimalVision'
             print('Group Selected: MV')
             print(self.calibPath)
 
@@ -1442,14 +1457,30 @@ def write_practice_files(r, timer_practice):
         if not r.is_paused:
             starttime = time.time()
 
-            log = str(timer_practice.elapsed_time) + "\t" + '\t'.join(map(str, r.body)) + "\t" + str(r.crs_x) + "\t" + \
+            ''' log = str(timer_practice.elapsed_time) + "\t" + '\t'.join(map(str, r.body)) + "\t" + str(r.crs_x) + "\t" + \
                   str(r.crs_y) + "\t" + str(r.block) + "\t" + \
                   str(r.repetition) + "\t" + str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + \
                   str(r.comeback) + "\t" + str(r.is_blind) + "\t" + str(r.at_home) + "\t" + str(r.count_mouse) + "\t" + \
                   str(r.score) + "\n"
+            '''
 
-            with open(r.path_log + "PracticeLog.txt", "a") as file_log:
+            log = str(timer_practice.elapsed_time) + "\t" + '\t'.join(map(str, body)) + "\t" + str(r.theta1) + "\t" + \
+                  str(r.theta2) + "\t" + str(r.theta3) + "\t" + str(r.crs_x) + "\t" + \
+                  str(r.crs_y) + "\t" + str(r.crs_z) + "\t" + str(r.block) + "\t" + str(r.repetition) + "\t" + \
+                 str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + "\t" + str(
+                  r.is_blind) + \
+                "\t" + str(r.at_home) + "\t" + str(r.count_mouse) + "\t" + str(r.score) + "\n"
+
+            if r.is_vision == 1:
+                group = "CompleteVision"
+            else:
+                group = "MinimalVision"
+
+            data_path = (r.path_log + "/" + group + "/" + str(r.subject_ID) + "/")
+
+            with open(data_path + "PracticeLog11.txt", "a") as file_log:
                 file_log.write(log)
+
 
             # write @ 50 Hz
             time.sleep(0.033 - ((time.time() - starttime) % 0.033))
