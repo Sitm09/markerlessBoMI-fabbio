@@ -381,8 +381,7 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints, v
     elif vision == 0:
         r.is_vision == 0
 
-    print("Compute Calibration debugging: " + str(vision) + "\n" + subID + "\n")
-
+    print("Compute Calibration debugging: " + str(r.is_vision) + "\n" + str(r.subject_id) + "\n")
 
     # The clock will be used to control how fast the screen updates. Stopwatch to count calibration time elapsed
     clock = pygame.time.Clock()
