@@ -39,11 +39,13 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.drPath = ''
+        self.calibPath = ''
 
         self.num_joints = 0
         self.joints = np.zeros((5, 1))
         self.dr_mode = 'pca'
         self.vision = 'min'
+        self.subID = '09'
 
         # set checkboxes for selecting joints
         self.check_nose = BooleanVar()
@@ -59,13 +61,17 @@ class MainApplication(tk.Frame):
         self.check4.place(relx=0.35, rely=0.1, anchor='sw')
 
         self.check_forefinger = BooleanVar()
-        self.check5 = Checkbutton(tk_window, font='Times 18 bold', text="right forefinger",
-                                  variable=self.check_forefinger)
+        self.check5 = Checkbutton(tk_window, font='Times 18 bold', text="right forefinger", variable=self.check_forefinger)
         self.check5.place(relx=0.5, rely=0.1, anchor='sw')
 
         self.check_fingers = BooleanVar()
         self.check6 = Checkbutton(tk_window, font='Times 18 bold', text="fingers", variable=self.check_fingers)
         self.check6.place(relx=0.7, rely=0.1, anchor='sw')
+
+        # setting toggle checkbox for vision (default is minimal vision)
+        self.check_vision = BooleanVar()
+        self.check_vision1 = Checkbutton(tk_window, font='Times 20 bold', text="Vision", variable=self.check_vision)
+        self.check_vision1.place(relx=0.55, rely=0.3, anchor='sw')
 
         self.btn_num_joints = Button(parent, font='Times 22 bold', text="Select Joints", command=self.select_joints)
         self.btn_num_joints.pack()
@@ -124,24 +130,20 @@ class MainApplication(tk.Frame):
         self.check1 = Checkbutton(tk_window, font='Times 22 bold', text="Mouse control", variable=self.check_mouse)
         self.check1.place(relx=0.35, rely=0.5, anchor='sw')
 
-        # setting toggle checkbox for vision (default is minimal vision)
-        self.check_vision = BooleanVar()
-        self.check_vision1 = Checkbutton(tk_window, font='Times 20 bold', text="Vision", variable=self.check_vision)
-        self.check_vision1.place(relx=0.55, rely=0.3, anchor='sw')
-
         # set ID Entry Box for subject record keeping and identification
-        self.subID = Entry(tk_window, font='Times 20 bold', width='3')
-        self.subID.place(relx=0.35, rely=0.2, anchor='sw')
+        self.entry_subID = Entry(tk_window, font='Times 20 bold', width='3')
+        self.entry_subID.place(relx=0.35, rely=0.2, anchor='sw')
 
     def select_joints(self):
-
-        r = Reaching()
 
         nose_enabled = self.check_nose.get()
         eyes_enabled = self.check_eyes.get()
         shoulders_enabled = self.check_shoulders.get()
         forefinger_enabled = self.check_forefinger.get()
         fingers_enabled = self.check_fingers.get()
+        vision_enabled = self.check_vision.get()
+        self.subID = self.entry_subID.get()
+
         if nose_enabled:
             self.num_joints += 2
             self.joints[0, 0] = 1
@@ -158,46 +160,34 @@ class MainApplication(tk.Frame):
             self.num_joints += 42
             self.joints[4, 0] = 1
 
-        r.subject_ID = self.subID.get()
+        # r.subject_id = self.subID.get()
 
         # error checking to make sure all fields are filled in
-        if np.sum(self.joints, axis=0) != 0 and self.subID.get() != "":
+        if np.sum(self.joints, axis=0) != 0 and self.subID != "":
             self.btn_calib["state"] = "normal"
             self.btn_map["state"] = "normal"
             self.btn_custom["state"] = "normal"
             self.btn_start["state"] = "normal"
-            # print('Joints correctly selected.\nSubject ID: ' + self.subID.get())
-            print('Joints correctly selected.\nSubject ID: ' + r.subject_ID)
-
-        # setting calibration pathway
-        if self.check_vision.get():
-            r.is_vision = 1
-            group = "CompleteVision"
-        else:
-            r.is_vision = 0
-            group = "MinimalVision"
-
-        # r.path_log = os.path.dirname(os.path.abspath(__file__)) + "/Results/" + group + "/" + self.subID.get()
-        r.path_log = os.path.dirname(os.path.abspath(__file__)) + "/Results/" + group + "/" + r.subject_ID
-
-        self.calibPath = r.path_log + "/calib/"
+            print('Joints correctly selected.\nSubject ID: ' + self.subID)
+            # print('Joints correctly selected.\nSubject ID: ' + r.subject_ID)
 
         # check if minimal vision or complete vision. Will separate into folders later
-        vision_enabled = self.check_vision.get()
         if vision_enabled:
-            self.vision = 'CompleteVision'
             print('Group Selected: CV')
-            print(self.calibPath)
+            self.vision = "CompleteVision"
         else:
-            self.vision = 'MinimalVision'
             print('Group Selected: MV')
-            print(self.calibPath)
+            self.vision = "MinimalVision"
+
+        self.calibPath = os.path.dirname(os.path.abspath(__file__)) + "/Results/" + self.vision + "/" + self.subID + "/calib/"
+        print(self.calibPath)
+        # r.path_log = os.path.dirname(os.path.abspath(__file__)) + self.vision # + "/" + self.subID.get()
 
     def calibration(self):
         # start calibration dance - collect webcam data
         self.w = popupWindow(self.master, "You will now start calibration.")
         self.master.wait_window(self.w.top)
-        compute_calibration(self.calibPath, self.calib_duration, self.lbl_calib, self.num_joints, self.joints)
+        compute_calibration(self.calibPath, self.calib_duration, self.lbl_calib, self.num_joints, self.joints, self.vision, self.subID)
         self.btn_map["state"] = "normal"
 
     def train_map(self):
@@ -373,7 +363,7 @@ class popupWindow(object):
         self.top.destroy()
 
 
-def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
+def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints, vision, subID):
     """
     function called to collect calibration data from webcam
     :param drPath: path to save calibration file
@@ -384,6 +374,15 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints):
     # Create object of openCV and Reaching (needed for terminating mediapipe thread)
     cap = cv2.VideoCapture(0)
     r = Reaching()
+
+    r.subject_id = subID
+    if vision == 1:
+        r.is_vision = 1
+    elif vision == 0:
+        r.is_vision == 0
+
+    print("Compute Calibration debugging: " + str(vision) + "\n" + subID + "\n")
+
 
     # The clock will be used to control how fast the screen updates. Stopwatch to count calibration time elapsed
     clock = pygame.time.Clock()
@@ -1199,8 +1198,8 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
             #     r.crs_x += 75
 
             # Check if the crs is greater than set angle magnitude velocity:
-            max_angle_velocity = 7
-            min_angle_velocity = -7
+            max_angle_velocity = 5
+            min_angle_velocity = -5
 
             if r.crs_x >= max_angle_velocity:
                 r.crs_x = max_angle_velocity
@@ -1453,6 +1452,16 @@ def write_practice_files(r, timer_practice):
     :param timer_practice: stopwatch that keeps track of elapsed time during reaching
     :return:
     """
+
+    if r.is_vision == 1:
+        group = "CompleteVision"
+    elif r.is_vision == 0:
+        group = "MinimalVision"
+
+    data_path = (r.path_log + "/" + group + "/" + str(r.subject_id) + "/")
+    print(data_path + "\n")
+    print(str(r.subject_id) + "\n")
+
     while not r.is_terminated:
         if not r.is_paused:
             starttime = time.time()
@@ -1471,16 +1480,8 @@ def write_practice_files(r, timer_practice):
                   r.is_blind) + \
                 "\t" + str(r.at_home) + "\t" + str(r.count_mouse) + "\t" + str(r.score) + "\n"
 
-            if r.is_vision == 1:
-                group = "CompleteVision"
-            else:
-                group = "MinimalVision"
-
-            data_path = (r.path_log + "/" + group + "/" + str(r.subject_ID) + "/")
-
-            with open(data_path + "PracticeLog11.txt", "a") as file_log:
+            with open(data_path + "PracticeLog.txt", "a") as file_log:
                 file_log.write(log)
-
 
             # write @ 50 Hz
             time.sleep(0.033 - ((time.time() - starttime) % 0.033))

@@ -7,8 +7,10 @@ import os
 
 def write_header(r):
     # First check whether Practice folder exists. If not, create it
-    if not os.path.exists(r.path_log):
-        os.mkdir(r.path_log)
+
+    data_path = (r.path_log + "/" + r.subject_id)
+    if not os.path.exists(data_path):
+        os.mkdir(data_path)
 
     header = "time\twrist_x\twrist_y\tthumb_cmc_x\tthumb_cmc_y\tthumb_mcp_x\tthumb_mcp_y\tthumb_ip_x\tthump_ip_y\t"\
              "thumb_tip_x\tthumb_tip_y\tindex_finger_mcp_x\tindex_finger_mcp_y\tindex_finger_pip_x\tindex_finger_pip_y"\
@@ -19,7 +21,7 @@ def write_header(r):
              "pinky_mcp_x\tpinky_mcp_y\tpinky_pip_x\tpinky_pip_y\tpinky_dip_x\tpinky_dip_y\tpinky_tip_x\tpinky_tip_y\t"\
              "theta1\ttheta2\ttheta3\tomega1\tomega2\tomega3\t"\
              "block\trepetition\ttarget\ttrial\tstate\tcomeback\tis_blind\tat_home\tcount_mouse\tscore\n"
-    with open(r.path_log + "PracticeLog.txt", "w+") as file_log:
+    with open(data_path + "/PracticeLog.txt", "w+") as file_log:
         file_log.write(header)
 
 
@@ -186,7 +188,14 @@ def write_practice_files(r, body, timer_practice):
           str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + "\t" + str(r.is_blind) +\
           "\t" + str(r.at_home) + "\t" + str(r.count_mouse) + "\t" + str(r.score) + "\n"
 
-    with open(r.path_log + "PracticeLog.txt", "a") as file_log:
+    if r.is_vision == 1:
+        group = "CompleteVision"
+    else:
+        group = "MinimalVision"
+
+    data_path = (r.path_log + "/" + group + "/" + str(r.subject_id) + "/")
+
+    with open(data_path + "PracticeLog.txt", "a") as file_log:
         file_log.write(log)
 
 
@@ -361,6 +370,93 @@ def check_time_reaching(r, timer_enter_tgt, timer_start_trial, timer_practice):
         # timer_start_trial.restart()  # restart is a reset + start
         timer_start_trial.start()  # Restart timer that keeps track of time elapsed since the beginning of the reach
 
+
+def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_practice):
+    if r.state == 0:  # OUT OF target, IN TIME
+        # if more than 1s is elapsed from beginning of the reaching:
+        # change status(OUT OF target, OUT OF TIME) -> cursor red
+        if timer_start_trial.elapsed_time > 1000:
+            r.state = 1
+    # BLIND TRIAL: cursor must stay in a specific region(+-50 pxl) for 100 ticks(100 * 20ms = 2000ms)
+    if r.is_blind == 1 and r.count_mouse == 100:
+        r.is_blind = 0
+
+    # VISUAL FEEDBACK ON: cursor must stay inside the target for 250 ms.
+    if r.is_blind == 0 and r.state == 2 and timer_enter_tgt.elapsed_time > 250:
+        # timer_enter_tgt.reset()  # Stops time interval measurement and resets the elapsed time to zero.
+        timer_enter_tgt.start()
+        r.count_mouse = 0
+        r.state = 0  # a new reaching will begin.state back to 0 (OUT OF target, IN TIME) -> cursor green
+
+        if timer_start_trial.elapsed_time < 2000:
+            r.score += 4
+        elif timer_start_trial.elapsed_time < 3000:
+            r.score += 3
+        elif timer_start_trial.elapsed_time < 4000:
+            r.score += 2
+        else:
+            r.score += 1
+
+        # Random Walk
+        if r.block == 2 or r.block == 3 or r.block == 4 or r.block == 5 or r.block == 7 or r.block == 8 or r.block == 9 or r.block == 10:
+            if r.comeback == 0:  # going towards peripheral targets
+                # Never comeback home
+                # if you finished a repetition
+                if r.target == r.tot_targets[r.block - 1] - 1:
+                    r.target = 0
+                    r.repetition += 1
+                else:
+                    r.target += 1
+
+                # if you're entering the last repetition -> is_blind = true
+                if r.repetition == r.tot_repetitions[r.block - 1]:
+                    r.is_blind = 1
+                r.trial += 1
+
+            else:  # going towards home target (used just at the beginning of the experiment)
+                r.comeback = 0
+
+        # Center-Out
+        else:
+            if r.comeback == 0:  # going towards peripheral targets
+                # next go to home tgt
+                r.comeback = 1
+                r.target += 1
+
+                # if you finished a repetition
+                # (last tgt don't come back home, just update trial and repetition and reset target)
+                if r.target == r.tot_targets[r.block - 1]:
+                    r.target = 0
+                    r.repetition += 1
+                    r.trial += 1
+                    r.comeback = 1
+            else:  # going towards home target (used just at the beginning of the experiment)
+                # next go to peripheral tgt
+                r.comeback = 0
+                if r.target != 0:
+                    r.trial += 1
+
+        # pause acquisition if you have finished all repetitions.
+        if r.repetition > r.tot_repetitions[r.block - 1]:
+            pause_acquisition(r, timer_practice)
+
+            r.score = 0
+            r.is_blind = 1
+            r.target = 0
+            r.comeback = 1
+            r.repetition = 1
+
+            # stop if you finished all the blocks
+            if r.block == r.tot_blocks:
+                stop_thread(r)
+                print("Practice is finished!")
+
+            else:
+                r.block += 1
+                initialize_targets(r)
+
+        # timer_start_trial.restart()  # restart is a reset + start
+        timer_start_trial.start()  # Restart timer that keeps track of time elapsed since the beginning of the reach
 
 def pause_acquisition(r, timer_practice):
     # If you are doing the reaching, stop the acquisition timer and sensors thread

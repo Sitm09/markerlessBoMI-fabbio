@@ -59,7 +59,7 @@ class Reaching:
 
         # file parameters and subject information
         self._path_log = os.path.dirname(os.path.abspath(__file__)) + "/Results"
-        self._subject_ID = 0
+        self._subject_id = '99'
         self._day = 0
         self._epoch = 0
 
@@ -87,6 +87,10 @@ class Reaching:
     @property
     def tgt_dist(self):
         return self._tgt_dist
+
+    @tgt_dist.setter
+    def tgt_dist(self, value):
+        self._tgt_dist = value
 
     @property
     def link_length(self):
@@ -343,12 +347,12 @@ class Reaching:
         self._path_log = value
 
     @property
-    def subject_ID(self):
-        return self._subject_ID
+    def subject_id(self):
+        return self._subject_id
 
-    @subject_ID.setter
-    def subject_ID(self, value):
-        self._subject_ID = value
+    @subject_id.setter
+    def subject_id(self, value):
+        self._subject_id = value
 
     @property
     def day(self):
