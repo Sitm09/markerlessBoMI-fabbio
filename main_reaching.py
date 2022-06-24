@@ -12,7 +12,7 @@ import queue
 import cv2
 # For GUI
 import tkinter as tk
-from tkinter import Label, Button, BooleanVar, Checkbutton, Text, Entry
+from tkinter import Label, Button, BooleanVar, Checkbutton, Text, Entry, StringVar, Radiobutton, ttk
 # For pygame
 import pygame
 # For reaching task
@@ -46,6 +46,7 @@ class MainApplication(tk.Frame):
         self.dr_mode = 'pca'
         self.vision = 'min'
         self.subID = '09'
+        self.day = "01"
 
         # set checkboxes for selecting joints
         self.check_nose = BooleanVar()
@@ -134,6 +135,17 @@ class MainApplication(tk.Frame):
         self.entry_subID = Entry(tk_window, font='Times 20 bold', width='3')
         self.entry_subID.place(relx=0.35, rely=0.2, anchor='sw')
 
+        # make radio button to choose the day of the experiment
+        self.radbtn_days = StringVar(tk_window, "1")
+        DAYS = {"Day 1": "1",
+                "Day 2": "2",
+                "Day 3": "3",
+                "Day 4": "4",
+                "Day 5": "5"}
+        for text, day in DAYS.items():
+            self.radbtn1 = Radiobutton(tk_window, text=text, variable=self.radbtn_days, value=day, font='Times 20 bold').pack(anchor='sw', side='left')
+
+
     def select_joints(self):
 
         nose_enabled = self.check_nose.get()
@@ -143,6 +155,7 @@ class MainApplication(tk.Frame):
         fingers_enabled = self.check_fingers.get()
         vision_enabled = self.check_vision.get()
         self.subID = self.entry_subID.get()
+        self.day = self.radbtn_days.get()
 
         if nose_enabled:
             self.num_joints += 2
@@ -160,15 +173,13 @@ class MainApplication(tk.Frame):
             self.num_joints += 42
             self.joints[4, 0] = 1
 
-        # r.subject_id = self.subID.get()
-
         # error checking to make sure all fields are filled in
         if np.sum(self.joints, axis=0) != 0 and self.subID != "":
             self.btn_calib["state"] = "normal"
             self.btn_map["state"] = "normal"
             self.btn_custom["state"] = "normal"
             self.btn_start["state"] = "normal"
-            print('Joints correctly selected.\nSubject ID: ' + self.subID)
+            print('Joints correctly selected.\nSubject ID: ' + self.subID + '\n' + "Day " + self.day + " of day 5")
             # print('Joints correctly selected.\nSubject ID: ' + r.subject_ID)
 
         # check if minimal vision or complete vision. Will separate into folders later
@@ -180,14 +191,14 @@ class MainApplication(tk.Frame):
             self.vision = "MinimalVision"
 
         self.calibPath = os.path.dirname(os.path.abspath(__file__)) + "/Results/" + self.vision + "/" + self.subID + "/calib/"
-        print(self.calibPath)
         # r.path_log = os.path.dirname(os.path.abspath(__file__)) + self.vision # + "/" + self.subID.get()
 
     def calibration(self):
         # start calibration dance - collect webcam data
         self.w = popupWindow(self.master, "You will now start calibration.")
         self.master.wait_window(self.w.top)
-        compute_calibration(self.calibPath, self.calib_duration, self.lbl_calib, self.num_joints, self.joints, self.vision, self.subID)
+        compute_calibration(self.calibPath, self.calib_duration, self.lbl_calib, self.num_joints, self.joints, \
+                            self.vision, self.subID, self.day)
         self.btn_map["state"] = "normal"
 
     def train_map(self):
@@ -232,7 +243,7 @@ class MainApplication(tk.Frame):
             # open pygame and start reaching task
             self.w = popupWindow(self.master, "You will now start practice.")
             self.master.wait_window(self.w.top)
-            start_reaching(self.drPath, self.check_mouse, self.lbl_tgt, self.num_joints, self.joints, self.dr_mode)
+            start_reaching(self.drPath, self.check_mouse, self.lbl_tgt, self.num_joints, self.joints, self.dr_mode, self.vision, self.subID, self.day)
         else:
             self.w = popupWindow(self.master, "Perform customization first.")
             self.master.wait_window(self.w.top)
@@ -339,7 +350,7 @@ class CustomizationApplication(tk.Frame):
         return self.txt_oz.get("1.0", "end-1c")
 
     def customization(self):
-        initialize_customization(self, self.dr_mode, self.drPath, self.num_joints, self.joints, self.vision)
+        initialize_customization(self, self.dr_mode, self.drPath, self.num_joints, self.joints, self.vision, self.day)
 
     def save_parameters(self):
         save_parameters(self, self.drPath)
@@ -363,7 +374,7 @@ class popupWindow(object):
         self.top.destroy()
 
 
-def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints, vision, subID):
+def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints, vision, subID, day):
     """
     function called to collect calibration data from webcam
     :param drPath: path to save calibration file
@@ -376,6 +387,8 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints, v
     r = Reaching()
 
     r.subject_id = subID
+    r.day = day
+
     if vision == 1:
         r.is_vision = 1
     elif vision == 0:
@@ -673,7 +686,7 @@ def load_bomi_map(dr_mode, drPath):
     return map
 
 
-def initialize_customization(self, dr_mode, drPath, num_joints, joints, vision):
+def initialize_customization(self, dr_mode, drPath, num_joints, joints, vision, day):
     """
     initialize objects needed for online cursor control. Start all the customization threads as well
     :param self: CustomizationApplication tkinter Frame. needed to retrieve textbox values programmatically
@@ -1012,7 +1025,8 @@ def save_parameters(self, drPath):
 
     print('Customization values have been saved. You can continue with practice.')
 
-def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
+
+def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vision, subID, day):
     """
     function to perform online cursor control - practice
     :param drPath: path where to load the BoMI forward map and customization values
@@ -1083,7 +1097,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
 
     # initialize targets and the reaching log file header
     reaching_functions.initialize_targets(r)
-    reaching_functions.write_header(r)
+    reaching_functions.write_header(r, vision, subID, day)
 
     # load BoMI forward map parameters for converting body landmarks into cursor coordinates
     map = load_bomi_map(dr_mode, drPath)
@@ -1129,7 +1143,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode):
     print("mediapipe thread started in practice.")
 
     # initialize thread for writing reaching log file
-    wfile_thread = Thread(target=write_practice_files, args=(r, timer_practice))
+    wfile_thread = Thread(target=write_practice_files, args=(r, timer_practice, vision, subID, day))
     timer_practice.start()  # start the timer for PracticeLog
     wfile_thread.start()
     print("writing reaching log file thread started in practice.")
@@ -1444,7 +1458,7 @@ def mediapipe_forwardpass(hands, mp_hands, lock, q_frame, r, num_joints, joints)
     print('Mediapipe_forwardpass thread terminated.')
 
 
-def write_practice_files(r, timer_practice):
+def write_practice_files(r, timer_practice, vision, subID, day):
     """
     function that runs in the thread for writing reaching log in a file
     :param r: object of Reaching class
@@ -1452,14 +1466,7 @@ def write_practice_files(r, timer_practice):
     :return:
     """
 
-    if r.is_vision == 1:
-        group = "CompleteVision"
-    elif r.is_vision == 0:
-        group = "MinimalVision"
-
-    data_path = (r.path_log + "/" + group + "/" + str(r.subject_id) + "/")
-    print(data_path + "\n")
-    print(str(r.subject_id) + "\n")
+    data_path = (r.path_log + "/" + vision + "/" + subID + "/")
 
     while not r.is_terminated:
         if not r.is_paused:
@@ -1479,7 +1486,7 @@ def write_practice_files(r, timer_practice):
                   r.is_blind) + \
                 "\t" + str(r.at_home) + "\t" + str(r.count_mouse) + "\t" + str(r.score) + "\n"
 
-            with open(data_path + "PracticeLog.txt", "a") as file_log:
+            with open(data_path + "ResultsLogDay" + str(day) + ".txt", "a") as file_log:
                 file_log.write(log)
 
             # write @ 50 Hz

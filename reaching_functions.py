@@ -1,16 +1,29 @@
 import numpy as np
 import pandas as pd
 from scipy import signal as sgn
+import ctypes
 
 import os
 
 
-def write_header(r):
+def write_header(r, vision, subID, day):
     # First check whether Practice folder exists. If not, create it
 
-    data_path = (r.path_log + "/" + r.subject_id)
+    # print(vision)
+    # if vision == 'max':
+    #     group = "CompleteVision"
+    # elif vision == 'min':
+    #     group = "MinimalVision"
+
+    data_path = (r.path_log + "/" + vision + "/" + str(subID) + "/")
     if not os.path.exists(data_path):
         os.mkdir(data_path)
+
+    data_file = data_path + "ResultsLogDay" + str(day) + ".txt"
+    if os.path.exists(data_file):
+        ctypes.windll.user32.MessageBoxW(0, "Overwrite is about to occur. Please make sure to check file names.", \
+                                         "Overwrite File Protection", 2)
+        exit()
 
     header = "time\twrist_x\twrist_y\tthumb_cmc_x\tthumb_cmc_y\tthumb_mcp_x\tthumb_mcp_y\tthumb_ip_x\tthump_ip_y\t"\
              "thumb_tip_x\tthumb_tip_y\tindex_finger_mcp_x\tindex_finger_mcp_y\tindex_finger_pip_x\tindex_finger_pip_y"\
@@ -21,7 +34,7 @@ def write_header(r):
              "pinky_mcp_x\tpinky_mcp_y\tpinky_pip_x\tpinky_pip_y\tpinky_dip_x\tpinky_dip_y\tpinky_tip_x\tpinky_tip_y\t"\
              "theta1\ttheta2\ttheta3\tomega1\tomega2\tomega3\t"\
              "block\trepetition\ttarget\ttrial\tstate\tcomeback\tis_blind\tat_home\tcount_mouse\tscore\n"
-    with open(data_path + "/PracticeLog.txt", "w+") as file_log:
+    with open(data_path + "ResultsLogDay" + str(day) + ".txt", "w+") as file_log:
         file_log.write(header)
 
 
@@ -195,7 +208,7 @@ def write_practice_files(r, body, timer_practice):
 
     data_path = (r.path_log + "/" + group + "/" + str(r.subject_id) + "/")
 
-    with open(data_path + "PracticeLog.txt", "a") as file_log:
+    with open(data_path + "PracticeLog" + r.day + ".txt", "a") as file_log:
         file_log.write(log)
 
 
