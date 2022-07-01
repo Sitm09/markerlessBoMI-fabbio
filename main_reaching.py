@@ -26,6 +26,8 @@ import pyautogui
 import mediapipe as mp
 # For training pca/autoencoder
 from compute_bomi_map import Autoencoder, PrincipalComponentAnalysis, compute_vaf
+# For displaying the gif
+from PIL import Image
 
 pyautogui.PAUSE = 0.01  # set fps of cursor to 100Hz ish when mouse_enabled is True
 
@@ -231,7 +233,7 @@ class MainApplication(tk.Frame):
             self.newWindow = tk.Toplevel(self.master)
             self.newWindow.geometry("1000x500")
             self.app = CustomizationApplication(self.newWindow, self, drPath=self.drPath, num_joints=self.num_joints,
-                                                joints=self.joints, dr_mode=self.dr_mode, vision=self.vision)
+                                                joints=self.joints, dr_mode=self.dr_mode, vision=self.vision, day=self.day)
         else:
             self.w = popupWindow(self.master, "Compute BoMI map first.")
             self.master.wait_window(self.w.top)
@@ -249,13 +251,12 @@ class MainApplication(tk.Frame):
             self.master.wait_window(self.w.top)
             self.btn_start["state"] = "disabled"
 
-
 class CustomizationApplication(tk.Frame):
     """
     class that defines the customization tkinter window
     """
 
-    def __init__(self, parent, mainTk, drPath, num_joints, joints, dr_mode, vision):
+    def __init__(self, parent, mainTk, drPath, num_joints, joints, dr_mode, vision, day):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.mainTk = mainTk
@@ -264,6 +265,7 @@ class CustomizationApplication(tk.Frame):
         self.joints = joints
         self.dr_mode = dr_mode
         self.vision = vision
+        self.day = day
 
         self.lbl_rot = Label(parent, font='Times 22 bold', text='Rotation ')
         self.lbl_rot.pack()
@@ -357,7 +359,6 @@ class CustomizationApplication(tk.Frame):
         self.parent.destroy()
         self.mainTk.btn_start["state"] = "normal"
 
-
 class popupWindow(object):
     """
     class that defines the popup tkinter window
@@ -383,7 +384,7 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints, v
     :return:
     """
     # Create object of openCV and Reaching (needed for terminating mediapipe thread)
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     r = Reaching()
 
     r.subject_id = subID
@@ -695,7 +696,7 @@ def initialize_customization(self, dr_mode, drPath, num_joints, joints, vision, 
     """
 
     # Create object of openCV, Reaching class and filter_butter3
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     r = Reaching()
     filter_curs = FilterButter3("lowpass_4")
 
@@ -1053,7 +1054,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vi
 
 
     # Create object of openCV, Reaching class and filter_butter3
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     r = Reaching()
     filter_curs = FilterButter3("lowpass_4")
 
@@ -1300,22 +1301,25 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vi
                 deg1 = font.render("{:.3f}".format(r.crs_x), True, RED)
                 deg2 = font.render("{:.3f}".format(r.crs_y), True, RED)
                 deg3 = font.render("{:.3f}".format(r.crs_z), True, RED)
+                cur_comeback = font.render("{:.3f}".format(r.comeback), True, YELLOW)
                 x_coord = font.render(str(r.crs_anchor_x), True, GREEN)
                 y_coord = font.render(str(r.crs_anchor_y), True, GREEN)
+                trial_time = font.render(str(timer_start_trial.elapsed_time), True, YELLOW)
                 screen.blit(deg1, (15, 10))
                 screen.blit(deg2, (15, 60))
                 screen.blit(deg3, (15, 110))
                 screen.blit(x_coord, (15, 160))
                 screen.blit(y_coord, (15, 210))
+                screen.blit(trial_time, (15, 260))
+                screen.blit(cur_comeback, (15, 310))
 
                 # --- update the screen with what we've drawn.
                 pygame.display.flip()
 
                 # After showing the cursor, check whether cursor is in the target
-                # reaching_functions.check_target_reaching(r, timer_enter_tgt) OLD CODE FROM X-Y
                 reaching_functions.check_target_reaching_links(r, timer_enter_tgt)
                 # Then check if cursor stayed in the target for enough time
-                reaching_functions.check_time_reaching(r, timer_enter_tgt, timer_start_trial, timer_practice)
+                reaching_functions.check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_practice)
 
                 # update label with number of targets remaining
                 tgt_remaining = 248 - r.trial + 1

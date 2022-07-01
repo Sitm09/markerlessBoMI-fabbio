@@ -19,14 +19,14 @@ class Reaching:
         # Reaching parameters (from c# Baseform)
         self._tot_blocks = 11
         self._tot_repetitions = [1, 7, 7, 7, 7, 1, 7, 7, 7, 7, 1]
-        self._tot_targets = [8, 4, 4, 4, 4, 8, 4, 4, 4, 4, 8]
+        self._tot_targets = [6, 4, 4, 4, 4, 8, 4, 4, 4, 4, 8]
         self._block = 1
         self._repetition = 1
         self._trial = 1
         self._target = 0
         self._state = 0
         self._comeback = 1
-        with open(os.path.dirname(os.path.abspath(__file__)) + "/targets/circle_coadapt.txt", 'r') as f:
+        with open(os.path.dirname(os.path.abspath(__file__)) + "/targets/circle_links.txt", 'r') as f:
             list_tgt_tmp = f.read().splitlines()
         # with open('C:/Users/Sal/Documents/RoboticsLab/markerlessBOMI/markerlessBoMI-fabbio/targets/circle_coadapt.txt', 'r') as f:
             # list_tgt_tmp = f.read().splitlines()

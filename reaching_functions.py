@@ -46,13 +46,11 @@ def initialize_targets(r):
     """
     r.empty_tgt_x_list()
     r.empty_tgt_y_list()
-    for i in range(r.tot_targets[r.block - 1]):
+    for i in r.list_tgt:
         r.tgt_x_list.append(
-            (r.width / 2) + r.tgt_dist * np.cos(
-                (2 * i * np.pi / r.tot_targets[r.block - 1]) + np.pi / r.tot_targets[r.block - 1]))
+            (r.width / 2) + r.tgt_dist * np.cos(i * np.pi / 4))
         r.tgt_y_list.append(
-            (r.height / 2) + r.tgt_dist * np.sin(
-                (2 * i * np.pi / r.tot_targets[r.block - 1]) + np.pi / r.tot_targets[r.block - 1]))
+            (r.height / 2) + r.tgt_dist * np.sin(i * np.pi/4))
 
 
 def set_target_reaching_customization(r):
@@ -385,6 +383,17 @@ def check_time_reaching(r, timer_enter_tgt, timer_start_trial, timer_practice):
 
 
 def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_practice):
+    """
+    :param r: reaching function class
+    :param timer_enter_tgt: time within the target
+    :param timer_start_trial: time from when the trial started
+    :param timer_practice:
+    state 0: Cursor is out of target and less than 1 sec
+    state 1: Cursor outside of target and > 1 sec
+    state 2: Cursor within target
+    state 3: Cursor out of target and 10 secs (maybe)
+    :return:
+    """
     if r.state == 0:  # OUT OF target, IN TIME
         # if more than 1s is elapsed from beginning of the reaching:
         # change status(OUT OF target, OUT OF TIME) -> cursor red
@@ -394,8 +403,14 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
     if r.is_blind == 1 and r.count_mouse == 100:
         r.is_blind = 0
 
-    # VISUAL FEEDBACK ON: cursor must stay inside the target for 250 ms.
-    if r.is_blind == 0 and r.state == 2 and timer_enter_tgt.elapsed_time > 250:
+    # VISUAL FEEDBACK ON: cursor must stay inside the target for 250 ms or if time has gone over 10 secs
+    if timer_start_trial.elapsed_time > 10000:
+        r.comeback = 1
+        r.trial += 1
+        r.target += 1
+        timer_start_trial.start()
+
+    elif r.is_blind == 0 and r.state == 2 and timer_enter_tgt.elapsed_time > 250:
         # timer_enter_tgt.reset()  # Stops time interval measurement and resets the elapsed time to zero.
         timer_enter_tgt.start()
         r.count_mouse = 0
@@ -450,23 +465,23 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
                     r.trial += 1
 
         # pause acquisition if you have finished all repetitions.
-        if r.repetition > r.tot_repetitions[r.block - 1]:
-            pause_acquisition(r, timer_practice)
-
-            r.score = 0
-            r.is_blind = 1
-            r.target = 0
-            r.comeback = 1
-            r.repetition = 1
-
-            # stop if you finished all the blocks
-            if r.block == r.tot_blocks:
-                stop_thread(r)
-                print("Practice is finished!")
-
-            else:
-                r.block += 1
-                initialize_targets(r)
+        # if r.repetition > r.tot_repetitions[r.block - 1]:
+        #     pause_acquisition(r, timer_practice)
+        #
+        #     r.score = 0
+        #     r.is_blind = 1
+        #     r.target = 0
+        #     r.comeback = 1
+        #     r.repetition = 1
+        #
+        #     # stop if you finished all the blocks
+        #     if r.block == r.tot_blocks:
+        #         stop_thread(r)
+        #         print("Practice is finished!")
+        #
+        #     else:
+        #         # r.block += 1 Not doing blocks so we won't increase them
+        #         initialize_targets(r)
 
         # timer_start_trial.restart()  # restart is a reset + start
         timer_start_trial.start()  # Restart timer that keeps track of time elapsed since the beginning of the reach
