@@ -76,6 +76,7 @@ def set_target_reaching(r):
     if r.comeback == 0:
         r.tgt_x = r.tgt_x_list[r.list_tgt[r.trial - 1]]
         r.tgt_y = r.tgt_y_list[r.list_tgt[r.trial - 1]]
+        r.target = r.list_tgt[r.trial - 1]
     else:
         # When returning to home target visual feedback is restored
         r.is_blind = 0
@@ -404,10 +405,10 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
         r.is_blind = 0
 
     # VISUAL FEEDBACK ON: cursor must stay inside the target for 250 ms or if time has gone over 10 secs
-    if timer_start_trial.elapsed_time > 10000:
+    if timer_start_trial.elapsed_time > 10000 and r.comeback == 0:
         r.comeback = 1
         r.trial += 1
-        r.target += 1
+        # r.target += 1
         timer_start_trial.start()
 
     elif r.is_blind == 0 and r.state == 2 and timer_enter_tgt.elapsed_time > 250:

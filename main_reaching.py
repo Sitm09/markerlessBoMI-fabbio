@@ -46,7 +46,7 @@ class MainApplication(tk.Frame):
         self.num_joints = 0
         self.joints = np.zeros((5, 1))
         self.dr_mode = 'pca'
-        self.vision = 'min'
+        self.vision = 'MinimalVision'
         self.subID = '09'
         self.day = "01"
 
@@ -85,7 +85,7 @@ class MainApplication(tk.Frame):
         self.btn_calib.pack()
         self.btn_calib.place(relx=0.05, rely=0.25, anchor='sw')
         self.btn_calib["state"] = "disabled"
-        self.calib_duration = 5000
+        self.calib_duration = 25000
 
         # set checkboxes for selecting BoMI map
         self.check_pca = BooleanVar(value=True)
@@ -194,6 +194,8 @@ class MainApplication(tk.Frame):
 
         self.calibPath = os.path.dirname(os.path.abspath(__file__)) + "/Results/" + self.vision + "/" + self.subID + "/calib/"
         # r.path_log = os.path.dirname(os.path.abspath(__file__)) + self.vision # + "/" + self.subID.get()
+        self.drPath = self.calibPath + 'PCA/'
+        print(self.drPath)
 
     def calibration(self):
         # start calibration dance - collect webcam data
@@ -390,9 +392,9 @@ def compute_calibration(drPath, calib_duration, lbl_calib, num_joints, joints, v
     r.subject_id = subID
     r.day = day
 
-    if vision == 1:
+    if vision == "CompleteVision":
         r.is_vision = 1
-    elif vision == 0:
+    elif vision == "MinimalVision":
         r.is_vision == 0
 
     print("Compute Calibration debugging: " + str(r.is_vision) + "\n" + str(r.subject_id) + "\n")
@@ -787,6 +789,7 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off,
     size = (r.width, r.height)
     screen = pygame.display.set_mode(size)
     # screen = pygame.display.toggle_fullscreen()
+    print(str(pygame.display.list_modes()))
 
     # Defining the initial angle of rotation
     link_rot1 = 0
@@ -919,7 +922,7 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off,
             crs_anchor = (link3_anchor[0] + math.cos(math.radians(link_rot3)) * link3rect.w,
                           link3_anchor[1] - (math.sin(math.radians(link_rot3)) * link3rect.w))
 
-            if vision == 'max':
+            if vision == 'CompleteVision':
 
                 pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
                 pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
@@ -930,7 +933,7 @@ def cursor_customization(self, r, filter_curs, hands, cap, map, rot, scale, off,
                 pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
                 pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
                 pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
-            elif vision == 'min':
+            elif vision == 'MinimalVision':
                 pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
 
             # Drawing a hologram of the cursor if cursor currently outside the window boundaries
@@ -1013,10 +1016,13 @@ def save_parameters(self, drPath):
     rot = int(self.retrieve_txt_rot())
     gx_custom = float(self.retrieve_txt_gx())
     gy_custom = float(self.retrieve_txt_gy())
-    scale = [gx_custom, gy_custom, 1]
+    gz_custom = float(self.retrieve_txt_gz())
+    scale = [gx_custom, gy_custom, gz_custom]
+    # scale = [gx_custom, gy_custom, gz_custom (was 1)]
     ox_custom = int(self.retrieve_txt_ox())
     oy_custom = int(self.retrieve_txt_oy())
-    off = [ox_custom, oy_custom, 1]
+    oz_custom = int(self.retrieve_txt_oz())
+    off = [ox_custom, oy_custom, oz_custom]
 
     # save customization values
     with open(drPath + "rotation_custom.txt", 'w') as f:
@@ -1085,7 +1091,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vi
 
     # Open a new window
     size = (r.width, r.height)
-    screen = pygame.display.set_mode(size)
+    screen = pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.RESIZABLE, display=1)
     # screen = pygame.display.toggle_fullscreen()
 
     # The clock will be used to control how fast the screen updates
@@ -1503,7 +1509,7 @@ def write_practice_files(r, timer_practice, vision, subID, day):
 if __name__ == "__main__":
     # initialize mainApplication tkinter window
     tk_window = tk.Tk()
-    tk_window.geometry("1366x768")
+    tk_window.geometry("1366x768+1920+0")
 
     MainApplication(tk_window).pack(side="top", fill="both", expand=True)
 
