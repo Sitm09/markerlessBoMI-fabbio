@@ -1091,7 +1091,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vi
 
     # Open a new window
     size = (r.width, r.height)
-    screen = pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.RESIZABLE, display=1)
+    screen = pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.RESIZABLE, display=0)
     # screen = pygame.display.toggle_fullscreen()
 
     # The clock will be used to control how fast the screen updates
@@ -1270,18 +1270,32 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vi
 
                 # Do not show the cursor in the blind trials when the cursor is outside the home target
                 if not r.is_blind:
-                    # draw cursor
-                    # pygame.draw.circle(screen, CURSOR, (int(r.crs_x), int(r.crs_y)), r.crs_radius)
-                    # Drawing the links between the joints
-                    pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
-                    pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
-                    pygame.draw.line(screen, GREY, link3_anchor, crs_anchor, 4)
+                    # Switching conditions on day 4
+                    if day == "4" and vision == 'CompleteVision':
+                        pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
+                    elif day == "4" and vision == 'MinimalVision':
+                        pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
+                        pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
+                        pygame.draw.line(screen, GREY, link3_anchor, crs_anchor, 4)
 
-                    # Drawing the joints
-                    pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
-                    pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
-                    pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
-                    pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
+                        # Drawing the joints
+                        pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
+                        pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
+                        pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
+                        pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
+                    elif vision == 'CompleteVision':
+
+                        pygame.draw.line(screen, GREY, link1_anchor, link2_anchor, 4)
+                        pygame.draw.line(screen, GREY, link2_anchor, link3_anchor, 4)
+                        pygame.draw.line(screen, GREY, link3_anchor, crs_anchor, 4)
+
+                        # Drawing the joints
+                        pygame.draw.circle(screen, RED, link1_anchor, r.crs_radius)
+                        pygame.draw.circle(screen, RED, link2_anchor, r.crs_radius)
+                        pygame.draw.circle(screen, RED, link3_anchor, r.crs_radius)
+                        pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
+                    elif vision == 'MinimalVision':
+                        pygame.draw.circle(screen, CURSOR, crs_anchor, r.crs_radius * 1.25)
 
                 # draw target. green if blind, state 0 or 1. yellow if notBlind and state 2
                 if r.state == 0:  # green
@@ -1298,12 +1312,13 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vi
                 if crs_anchor[1] > r.height:
                     pygame.draw.circle(screen, GREY, (crs_anchor[0], r.height), r.crs_radius * 1.25, width=2)
 
-                # Display scores:
+                '''# Display scores:
                 font = pygame.font.Font(None, 50)
                 text = font.render(str(r.score), True, RED)
                 screen.blit(text, (1250, 10))
 
                 # Debugging purposes. Displaying information online
+                
                 deg1 = font.render("{:.3f}".format(r.crs_x), True, RED)
                 deg2 = font.render("{:.3f}".format(r.crs_y), True, RED)
                 deg3 = font.render("{:.3f}".format(r.crs_z), True, RED)
@@ -1318,6 +1333,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vi
                 screen.blit(y_coord, (15, 210))
                 screen.blit(trial_time, (15, 260))
                 screen.blit(cur_comeback, (15, 310))
+                '''
 
                 # --- update the screen with what we've drawn.
                 pygame.display.flip()
@@ -1491,10 +1507,11 @@ def write_practice_files(r, timer_practice, vision, subID, day):
 
             log = str(timer_practice.elapsed_time) + "\t" + '\t'.join(map(str, body)) + "\t" + str(r.theta1) + "\t" + \
                   str(r.theta2) + "\t" + str(r.theta3) + "\t" + str(r.crs_x) + "\t" + \
-                  str(r.crs_y) + "\t" + str(r.crs_z) + "\t" + str(r.block) + "\t" + str(r.repetition) + "\t" + \
+                  str(r.crs_y) + "\t" + str(r.crs_z) + "\t" +  str(r.crs_anchor_x) + "\t" + str(r.crs_anchor_y) + "\t" + \
+                  str(r.block) + "\t" + str(r.repetition) + "\t" + \
                  str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + "\t" + str(
                   r.is_blind) + \
-                "\t" + str(r.at_home) + "\t" + str(r.count_mouse) + "\t" + str(r.score) + "\n"
+                "\t" + str(r.at_home) + "\t" + "\t" + str(r.score) + "\n"
 
             with open(data_path + "ResultsLogDay" + str(day) + ".txt", "a") as file_log:
                 file_log.write(log)
@@ -1509,7 +1526,8 @@ def write_practice_files(r, timer_practice, vision, subID, day):
 if __name__ == "__main__":
     # initialize mainApplication tkinter window
     tk_window = tk.Tk()
-    tk_window.geometry("1366x768+1920+0")
+    #tk_window.geometry("1366x768+1920+0")
+    tk_window.geometry("1366x768")
 
     MainApplication(tk_window).pack(side="top", fill="both", expand=True)
 

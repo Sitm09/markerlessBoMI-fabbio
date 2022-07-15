@@ -32,8 +32,8 @@ def write_header(r, vision, subID, day):
              "\tmiddle_finger_tip_x\tmiddle_finger_tip_y\tring_finger_mcp_x\tring_finger_mcp_y\tring_finger_pip_x\t"\
              "ring_finger_pip_y\tring_finger_dip_x\tring_finger_dip_y\tring_finger_tip_x\tring_finger_tip_y\t" \
              "pinky_mcp_x\tpinky_mcp_y\tpinky_pip_x\tpinky_pip_y\tpinky_dip_x\tpinky_dip_y\tpinky_tip_x\tpinky_tip_y\t"\
-             "theta1\ttheta2\ttheta3\tomega1\tomega2\tomega3\t"\
-             "block\trepetition\ttarget\ttrial\tstate\tcomeback\tis_blind\tat_home\tcount_mouse\tscore\n"
+             "theta1\ttheta2\ttheta3\tomega1\tomega2\tomega3\tcursor_x\tcursor_y\t"\
+             "block\trepetition\ttarget\ttrial\tstate\tcomeback\tis_blind\tat_home\tscore\n"
     with open(data_path + "ResultsLogDay" + str(day) + ".txt", "w+") as file_log:
         file_log.write(header)
 
@@ -196,9 +196,10 @@ def write_practice_files(r, body, timer_practice):
 
     log = str(timer_practice.elapsed_time) + "\t" + '\t'.join(map(str, body)) + "\t" + str(r.theta1) + "\t" + \
           str(r.theta2) + "\t" + str(r.theta3) + "\t" + str(r.crs_x) + "\t" + \
-          str(r.crs_y) + "\t" + str(r.crs_z) + "\t" + str(r.block) + "\t" + str(r.repetition) + "\t" + \
+          str(r.crs_y) + "\t" + str(r.crs_z) + "\t" + str(r.crs_anchor_x) + "\t" + str(r.crs_anchor_y) + "\t" + \
+          str(r.block) + "\t" + str(r.repetition) + "\t" + \
           str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + "\t" + str(r.is_blind) +\
-          "\t" + str(r.at_home) + "\t" + str(r.count_mouse) + "\t" + str(r.score) + "\n"
+          "\t" + str(r.at_home) + "\t" + "\t" + str(r.score) + "\n"
 
     if r.is_vision == 1:
         group = "CompleteVision"
