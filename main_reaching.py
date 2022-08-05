@@ -1313,10 +1313,15 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vi
                     pygame.draw.circle(screen, GREY, (crs_anchor[0], r.height), r.crs_radius * 1.25, width=2)
 
                 '''# Display scores:
+                
                 font = pygame.font.Font(None, 50)
-                text = font.render(str(r.score), True, RED)
-                screen.blit(text, (1250, 10))
-
+                text = font.render(str(r.score), True, YELLOW)
+                epoch = font.render("{:.3f}".format(r.epoch), True, RED)
+                dist_now = font.render("{:.3f}".format(r.distance), True, GREY)
+                screen.blit(text, (r.width * 0.8, 10))
+                screen.blit(epoch, (r. width * 0.8, 60))
+                screen.blit(dist_now, (r. width * 0.8, 110))
+                
                 # Debugging purposes. Displaying information online
                 
                 deg1 = font.render("{:.3f}".format(r.crs_x), True, RED)
@@ -1331,7 +1336,7 @@ def start_reaching(drPath, check_mouse, lbl_tgt, num_joints, joints, dr_mode, vi
                 screen.blit(deg3, (15, 110))
                 screen.blit(x_coord, (15, 160))
                 screen.blit(y_coord, (15, 210))
-                screen.blit(trial_time, (15, 260))
+                screen.blit(trial_time, (15, 260)
                 screen.blit(cur_comeback, (15, 310))
                 '''
 
@@ -1511,7 +1516,7 @@ def write_practice_files(r, timer_practice, vision, subID, day):
                   str(r.block) + "\t" + str(r.repetition) + "\t" + \
                  str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + "\t" + str(
                   r.is_blind) + \
-                "\t" + str(r.at_home) + "\t" + "\t" + str(r.score) + "\n"
+                "\t" + str(r.at_home) + "\t" + str(r.score) + "\t" + str(r.distance) + "\t" + str(r.epoch) + "\n"
 
             with open(data_path + "ResultsLogDay" + str(day) + ".txt", "a") as file_log:
                 file_log.write(log)

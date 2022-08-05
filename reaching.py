@@ -8,12 +8,12 @@ class Reaching:
     """
     def __init__(self):
         # pygame parameters
-        self._width = 1920
-        self._height = 1080
+        self._width = 3840
+        self._height = 2160
         self._velocity3 = 3
-        self._crs_radius = 15
-        self._tgt_radius = 45
-        self._tgt_dist = 378
+        self._crs_radius = self.width/150
+        self._tgt_radius = self.width/50
+        self._tgt_dist = self.width/5
         self._link_length = self._width / 6.4  # 300 pixels long (6.4)
 
         # Reaching parameters (from c# Baseform)
@@ -32,6 +32,7 @@ class Reaching:
             # list_tgt_tmp = f.read().splitlines()
         self._list_tgt = [int(x) for x in list_tgt_tmp]
         self._score = 0
+        self._distance = 0
 
         # Reaching parameters (from c# PracticeForm)
         self._is_terminated = False
@@ -169,6 +170,14 @@ class Reaching:
     @score.setter
     def score(self, value):
         self._score = value
+
+    @property
+    def distance(self):
+        return self._distance
+
+    @distance.setter
+    def distance(self, value):
+        self._distance = value
 
     # Reaching parameters (from c# PracticeForm)
     @property

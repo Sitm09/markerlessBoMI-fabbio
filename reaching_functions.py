@@ -33,7 +33,7 @@ def write_header(r, vision, subID, day):
              "ring_finger_pip_y\tring_finger_dip_x\tring_finger_dip_y\tring_finger_tip_x\tring_finger_tip_y\t" \
              "pinky_mcp_x\tpinky_mcp_y\tpinky_pip_x\tpinky_pip_y\tpinky_dip_x\tpinky_dip_y\tpinky_tip_x\tpinky_tip_y\t"\
              "theta1\ttheta2\ttheta3\tomega1\tomega2\tomega3\tcursor_x\tcursor_y\t"\
-             "block\trepetition\ttarget\ttrial\tstate\tcomeback\tis_blind\tat_home\tscore\n"
+             "block\trepetition\ttarget\ttrial\tstate\tcomeback\tis_blind\tat_home\tscore\tdistance\treach\n"
     with open(data_path + "ResultsLogDay" + str(day) + ".txt", "w+") as file_log:
         file_log.write(header)
 
@@ -259,6 +259,7 @@ def check_target_reaching_links(r, timer_enter_tgt):
     Check if cursor is inside the target
     """
     dist = np.sqrt((r.crs_anchor_x - r.tgt_x) ** 2 + (r.crs_anchor_y - r.tgt_y) ** 2)
+    r.distance = dist
     # If you are not in a blind trial
     if r.is_blind == 0:
         if dist < r.tgt_radius:
@@ -313,14 +314,6 @@ def check_time_reaching(r, timer_enter_tgt, timer_start_trial, timer_practice):
         r.count_mouse = 0
         r.state = 0  # a new reaching will begin.state back to 0 (OUT OF target, IN TIME) -> cursor green
 
-        if timer_start_trial.elapsed_time < 2000:
-            r.score += 4
-        elif timer_start_trial.elapsed_time < 3000:
-            r.score += 3
-        elif timer_start_trial.elapsed_time < 4000:
-            r.score += 2
-        else:
-            r.score += 1
 
         # Random Walk
         if r.block == 2 or r.block == 3 or r.block == 4 or r.block == 5 or r.block == 7 or r.block == 8 or r.block == 9 or r.block == 10:
@@ -347,6 +340,7 @@ def check_time_reaching(r, timer_enter_tgt, timer_start_trial, timer_practice):
                 # next go to home tgt
                 r.comeback = 1
                 r.target += 1
+                r.epoch += 1
 
                 # if you finished a repetition
                 # (last tgt don't come back home, just update trial and repetition and reset target)
@@ -355,6 +349,7 @@ def check_time_reaching(r, timer_enter_tgt, timer_start_trial, timer_practice):
                     r.repetition += 1
                     r.trial += 1
                     r.comeback = 1
+                    r.score += 1
             else:  # going towards home target (used just at the beginning of the experiment)
                 # next go to peripheral tgt
                 r.comeback = 0
@@ -418,14 +413,6 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
         r.count_mouse = 0
         r.state = 0  # a new reaching will begin.state back to 0 (OUT OF target, IN TIME) -> cursor green
 
-        if timer_start_trial.elapsed_time < 2000:
-            r.score += 4
-        elif timer_start_trial.elapsed_time < 3000:
-            r.score += 3
-        elif timer_start_trial.elapsed_time < 4000:
-            r.score += 2
-        else:
-            r.score += 1
 
         # Random Walk
         if r.block == 2 or r.block == 3 or r.block == 4 or r.block == 5 or r.block == 7 or r.block == 8 or r.block == 9 or r.block == 10:
@@ -452,6 +439,7 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
                 # next go to home tgt
                 r.comeback = 1
                 r.target += 1
+                r.score += 1
 
                 # if you finished a repetition
                 # (last tgt don't come back home, just update trial and repetition and reset target)
@@ -463,6 +451,7 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
             else:  # going towards home target (used just at the beginning of the experiment)
                 # next go to peripheral tgt
                 r.comeback = 0
+                r.epoch += 1
                 if r.target != 0:
                     r.trial += 1
 
