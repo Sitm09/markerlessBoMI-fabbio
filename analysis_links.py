@@ -12,7 +12,7 @@ import reaching as r
 
 sub_ID = 84
 path_log = os.path.dirname(os.path.abspath(__file__)) + "/Results"
-results_file = path_log + "/CompleteVision/" + str(sub_ID) + "/ResultsLogDay1.txt"
+results_file = path_log + "/CompleteVision/" + str(sub_ID) + "/ResultsLogDay2.txt"
 # i = 0
 # p = 0
 # with open(results_file, newline='') as csvfile:
@@ -29,16 +29,9 @@ results_file = path_log + "/CompleteVision/" + str(sub_ID) + "/ResultsLogDay1.tx
 # Creates file from Log
 results = np.genfromtxt(results_file, delimiter='\t', skip_header=1, autostrip=True)
 # Removes preceding zeroes
-no_zeroes = np.delete(results, np.where(results[:,1] == 0), axis=0)
-time = results[:, 0]
+no_zeroes = np.delete(results, np.where(results[:, 1] == 0), axis=0)
+# Entire Day Success rate
+day_success = no_zeroes[-1, -3] / no_zeroes[-1, -1] * 100
 
-
-# ## Removing Zeroes
-# i = 0
-# for rows in results:
-#     if results[i, 1] == 0:
-#         i += 1
-#     else:
-#         print(i)
-#         break
+# Getting time it takes to get to the center target
 
