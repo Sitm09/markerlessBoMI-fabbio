@@ -438,7 +438,6 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
             if r.comeback == 0:  # going towards peripheral targets
                 # next go to home tgt
                 r.comeback = 1
-                r.target += 1
                 r.score += 1
 
                 # # if you finished a repetition
