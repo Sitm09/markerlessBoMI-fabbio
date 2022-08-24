@@ -439,7 +439,6 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
                 # next go to home tgt
                 r.comeback = 1
                 r.score += 1
-
                 # # if you finished a repetition
                 # # (last tgt don't come back home, just update trial and repetition and reset target)
                 # if r.target == r.tot_targets[r.block - 1]:
@@ -451,8 +450,7 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
                 # next go to peripheral tgt
                 r.comeback = 0
                 r.epoch += 1
-                if r.target != 0:
-                    r.trial += 1
+                r.trial += 1
 
         # pause acquisition if you have finished all repetitions.
         # if r.repetition > r.tot_repetitions[r.block - 1]:
