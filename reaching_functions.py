@@ -441,13 +441,13 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
                 r.target += 1
                 r.score += 1
 
-                # if you finished a repetition
-                # (last tgt don't come back home, just update trial and repetition and reset target)
-                if r.target == r.tot_targets[r.block - 1]:
-                    r.target = 0
-                    r.repetition += 1
-                    r.trial += 1
-                    r.comeback = 1
+                # # if you finished a repetition
+                # # (last tgt don't come back home, just update trial and repetition and reset target)
+                # if r.target == r.tot_targets[r.block - 1]:
+                #     r.target = 0
+                #     r.repetition += 1
+                #     r.trial += 1
+                #     r.comeback = 1
             else:  # going towards home target (used just at the beginning of the experiment)
                 # next go to peripheral tgt
                 r.comeback = 0
