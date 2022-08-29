@@ -1510,12 +1510,10 @@ def write_practice_files(r, timer_practice, vision, subID, day):
                   str(r.score) + "\n"
             '''
 
-            log = str(timer_practice.elapsed_time) + "\t" + '\t'.join(map(str, body)) + "\t" + str(r.theta1) + "\t" + \
+            log = str(timer_practice.elapsed_time) + "\t" + str(r.reach_time) + "\t" + '\t'.join(map(str, body)) + "\t" + str(r.theta1) + "\t" + \
                   str(r.theta2) + "\t" + str(r.theta3) + "\t" + str(r.crs_x) + "\t" + \
                   str(r.crs_y) + "\t" + str(r.crs_z) + "\t" +  str(r.crs_anchor_x) + "\t" + str(r.crs_anchor_y) + "\t" + \
-                  str(r.block) + "\t" + str(r.repetition) + "\t" + \
-                 str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + "\t" + str(
-                  r.is_blind) + \
+                 str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + \
                 "\t" + str(r.at_home) + "\t" + str(r.score) + "\t" + str(r.distance) + "\t" + str(r.epoch) + "\n"
 
             with open(data_path + "ResultsLogDay" + str(day) + ".txt", "a") as file_log:

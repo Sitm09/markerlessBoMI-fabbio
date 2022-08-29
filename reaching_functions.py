@@ -25,15 +25,15 @@ def write_header(r, vision, subID, day):
                                          "Overwrite File Protection", 2)
         exit()
 
-    header = "time\twrist_x\twrist_y\tthumb_cmc_x\tthumb_cmc_y\tthumb_mcp_x\tthumb_mcp_y\tthumb_ip_x\tthump_ip_y\t"\
+    header = "time\treach_time\twrist_x\twrist_y\tthumb_cmc_x\tthumb_cmc_y\tthumb_mcp_x\tthumb_mcp_y\tthumb_ip_x\tthump_ip_y\t"\
              "thumb_tip_x\tthumb_tip_y\tindex_finger_mcp_x\tindex_finger_mcp_y\tindex_finger_pip_x\tindex_finger_pip_y"\
              "\tindex_finger_dip_x\tindex_finger_dip_y\tindex_finger_tip_x\tindex_finger_tip_y\tmiddle_finger_mcp_x\t"\
              "middle_finger_mcp_y\tmiddle_finger_pip_x\tmiddle_finger_pip_y\tmiddle_finger_dip_x\tmiddle_finger_dip_y"\
              "\tmiddle_finger_tip_x\tmiddle_finger_tip_y\tring_finger_mcp_x\tring_finger_mcp_y\tring_finger_pip_x\t"\
              "ring_finger_pip_y\tring_finger_dip_x\tring_finger_dip_y\tring_finger_tip_x\tring_finger_tip_y\t" \
              "pinky_mcp_x\tpinky_mcp_y\tpinky_pip_x\tpinky_pip_y\tpinky_dip_x\tpinky_dip_y\tpinky_tip_x\tpinky_tip_y\t"\
-             "theta1\ttheta2\ttheta3\tomega1\tomega2\tomega3\tcursor_x\tcursor_y\t"\
-             "block\trepetition\ttarget\ttrial\tstate\tcomeback\tis_blind\tat_home\tscore\tdistance\treach\n"
+             "theta1\ttheta2\ttheta3\tomega1\tomega2\tomega3\tcursor_x\tcursor_y\ttarget\ttrial\tstate\tcomeback" \
+             "\tat_home\tscore\tdistance\treach\n"
     with open(data_path + "ResultsLogDay" + str(day) + ".txt", "w+") as file_log:
         file_log.write(header)
 
@@ -194,11 +194,11 @@ def update_degrees(body, map, rot_ae, scale_ae, off_ae, rot_custom, scale_custom
 
 def write_practice_files(r, body, timer_practice):
 
-    log = str(timer_practice.elapsed_time) + "\t" + '\t'.join(map(str, body)) + "\t" + str(r.theta1) + "\t" + \
+    log = str(timer_practice.elapsed_time) + "\t" + str(r.reach_time) + '\t'.join(map(str, body)) + "\t" + str(r.theta1) + "\t" + \
           str(r.theta2) + "\t" + str(r.theta3) + "\t" + str(r.crs_x) + "\t" + \
           str(r.crs_y) + "\t" + str(r.crs_z) + "\t" + str(r.crs_anchor_x) + "\t" + str(r.crs_anchor_y) + "\t" + \
           str(r.block) + "\t" + str(r.repetition) + "\t" + \
-          str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + "\t" + str(r.is_blind) +\
+          str(r.target) + "\t" + str(r.trial) + "\t" + str(r.state) + "\t" + str(r.comeback) + "\t" +\
           "\t" + str(r.at_home) + "\t" + "\t" + str(r.score) + "\n"
 
     if r.is_vision == 1:
@@ -391,6 +391,11 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
     state 3: Cursor out of target and 10 secs (maybe)
     :return:
     """
+
+    if timer_start_trial.elapsed_time > timer_practice.elapsed_time:
+        r.reach_time = timer_practice.elapsed_time
+    else:
+        r.reach_time = timer_start_trial.elapsed_time
     if r.state == 0:  # OUT OF target, IN TIME
         # if more than 1s is elapsed from beginning of the reaching:
         # change status(OUT OF target, OUT OF TIME) -> cursor red
@@ -403,15 +408,16 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
     # VISUAL FEEDBACK ON: cursor must stay inside the target for 250 ms or if time has gone over 10 secs
     if timer_start_trial.elapsed_time > 10000 and r.comeback == 0:
         r.comeback = 1
-        r.trial += 1
-        # r.target += 1
+        r.epoch += 1
         timer_start_trial.start()
 
     elif r.is_blind == 0 and r.state == 2 and timer_enter_tgt.elapsed_time > 250:
         # timer_enter_tgt.reset()  # Stops time interval measurement and resets the elapsed time to zero.
         timer_enter_tgt.start()
         r.count_mouse = 0
+        r.epoch += 1
         r.state = 0  # a new reaching will begin.state back to 0 (OUT OF target, IN TIME) -> cursor green
+
 
 
         # Random Walk
@@ -449,8 +455,8 @@ def check_time_reaching_links(r, timer_enter_tgt, timer_start_trial, timer_pract
             else:  # going towards home target (used just at the beginning of the experiment)
                 # next go to peripheral tgt
                 r.comeback = 0
-                r.epoch += 1
                 r.trial += 1
+
 
         # pause acquisition if you have finished all repetitions.
         # if r.repetition > r.tot_repetitions[r.block - 1]:

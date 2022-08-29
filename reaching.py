@@ -22,7 +22,7 @@ class Reaching:
         self._tot_targets = [6, 4, 4, 4, 4, 8, 4, 4, 4, 4, 8]
         self._block = 1
         self._repetition = 1
-        self._trial = 1
+        self._trial = 0
         self._target = 0
         self._state = 0
         self._comeback = 1
@@ -62,6 +62,7 @@ class Reaching:
         self._path_log = os.path.dirname(os.path.abspath(__file__)) + "/Results"
         self._subject_id = '99'
         self._day = 0
+        self._reach_time = 0
         self._epoch = 0
 
     # pygame parameters
@@ -370,6 +371,14 @@ class Reaching:
     @day.setter
     def day(self, value):
         self._day = value
+
+    @property
+    def reach_time(self):
+        return self._reach_time
+
+    @reach_time.setter
+    def reach_time(self, value):
+        self._reach_time = value
 
     @property
     def epoch(self):
